@@ -2,9 +2,12 @@
 // Form (NDJSON) for exact syntactic diffing / reproducibility (Invariant I8).
 //
 // For every row it canonicalizes any embedded T AST (any nested object carrying
-// an "op" field), key-sorts the payload, and emits a deterministic record with
-// a per-row SHA-256 `cnf_hash`. Records are sorted by instance_id, and a single
-// export-wide digest is printed as the store's reproducibility fingerprint.
+// an "op" field) and key-sorts the payload. Store-generated UUIDs are α-renamed
+// to sequential ids in content order — (constructor, source_map locus, payload
+// shape, t_text, t_fact) — and every payload-embedded reference is rewritten
+// through the same map (WP-5), so two independent compilers ingesting the same
+// corpus emit comparable, diffable exports. Each record carries a SHA-256
+// `cnf_hash`; an export-wide digest is printed as the store fingerprint.
 //
 // Reads go through kernel_instance_at(now(), now()) (temporal discipline, G4).
 // Output path is argv[1] (default "dump.cnf").
@@ -19,7 +22,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 
 	"github.com/jackc/pgx/v5"
 
@@ -87,8 +89,9 @@ func canonicalizeValue(v any) any {
 }
 
 type record struct {
-	InstanceID  string          `json:"instance_id"`
+	ID          string          `json:"id"` // α-name (k000001, ...), not a store UUID
 	Constructor string          `json:"constructor"`
+	Locus       string          `json:"locus,omitempty"`
 	TText       string          `json:"t_text"`
 	TFact       string          `json:"t_fact"`
 	CNFHash     string          `json:"cnf_hash"`
@@ -109,39 +112,60 @@ func main() {
 	defer conn.Close(ctx)
 
 	rows, err := conn.Query(ctx, `
-		SELECT instance_id::text, constructor::text, t_text::text, t_fact::text, payload
-		FROM kernel_instance_at(now(), now())`)
+		SELECT k.instance_id::text, k.constructor::text, k.t_text::text, k.t_fact::text,
+		       k.payload, COALESCE(s.locus, '')
+		FROM kernel_instance_at(now(), now()) k
+		LEFT JOIN source_map s ON s.instance_pk = k.pk`)
 	if err != nil {
 		log.Fatalf("query: %v", err)
 	}
 
-	var recs []record
+	var raw []cnf.Record
 	for rows.Next() {
-		var id, ctor, tt, tf string
+		var id, ctor, tt, tf, locus string
 		var payload []byte
-		if err := rows.Scan(&id, &ctor, &tt, &tf, &payload); err != nil {
+		if err := rows.Scan(&id, &ctor, &tt, &tf, &payload, &locus); err != nil {
 			log.Fatalf("scan: %v", err)
 		}
 		var decoded any
 		if err := json.Unmarshal(payload, &decoded); err != nil {
 			log.Fatalf("decode payload %s: %v", id, err)
 		}
-		canonical := marshalNoEscape(canonicalizeValue(decoded))
-		recs = append(recs, record{
+		raw = append(raw, cnf.Record{
 			InstanceID:  id,
 			Constructor: ctor,
+			Locus:       locus,
 			TText:       tt,
 			TFact:       tf,
-			CNFHash:     hashHex(canonical),
-			Payload:     json.RawMessage(canonical),
+			Payload:     canonicalizeValue(decoded),
 		})
 	}
 	if err := rows.Err(); err != nil {
 		log.Fatalf("rows: %v", err)
 	}
 
-	// Deterministic order.
-	sort.Slice(recs, func(i, j int) bool { return recs[i].InstanceID < recs[j].InstanceID })
+	// α-rename store UUIDs to content-ordered sequential ids (WP-5); the
+	// returned slice is already in deterministic export order.
+	renamed, _, ambiguous := cnf.AlphaRename(raw)
+	if ambiguous > 0 {
+		fmt.Fprintf(os.Stderr,
+			"WARNING: %d record(s) have colliding content keys; their order is stable for this store but not comparable across compilers\n",
+			ambiguous)
+	}
+
+	recs := make([]record, len(renamed))
+	for i, r := range renamed {
+		canonical := marshalNoEscape(r.Payload)
+		recs[i] = record{
+			ID:          r.InstanceID,
+			Constructor: r.Constructor,
+			Locus:       r.Locus,
+			TText:       r.TText,
+			TFact:       r.TFact,
+			CNFHash:     hashHex(canonical),
+			Payload:     json.RawMessage(canonical),
+		}
+	}
 
 	if err := os.MkdirAll(dir(outPath), 0o755); err != nil {
 		log.Fatalf("mkdir: %v", err)

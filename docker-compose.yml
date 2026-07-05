@@ -1,7 +1,7 @@
 # Governance Computing — service orchestration.
 # Phase 3.1 consolidation: the Python MVP compiler has been dropped. Layer E is
-# Go + PostgreSQL only. The `db` service is the sole anchor; the Go execution
-# engine (see engine/) connects to it over TCP on host port 5435.
+# Go + PostgreSQL only. The `db` service is the sole anchor; the Go reference
+# implementation (see compiler/) connects to it over TCP on host port 5435.
 # Compose v2 schema (no top-level `version:` key).
 
 services:

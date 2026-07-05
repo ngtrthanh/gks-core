@@ -18,5 +18,14 @@ Requirements for the export:
 
 ## Status
 
-Scaffolded. The CNF exporter and κ/agreement harness are not yet implemented;
-they will be added as `compiler/cmd/export_cnf` and a comparison driver here.
+The CNF exporter exists: `compiler/cmd/cnf_export` (α-renames store UUIDs to
+content-ordered sequential ids so exports are comparable across independent
+compilers; byte-stable digest verified across runs). Sealing/verification:
+`compiler/cmd/seal_export`, `compiler/cmd/verify_seal`.
+
+Still missing here (WP-8): the κ / verdict-agreement comparison driver over N
+independent CNF exports, and the constitutional floor assertions (κ ≥ 0.70,
+VA ≥ 0.90). Note the exports also depend on ingestion-time `t_text`/`t_fact`
+coordinates: independent compilers must derive coordinates from the corpus
+text, not wall-clock ingest time, before cross-compiler byte-comparison is
+meaningful.

@@ -1,4 +1,12 @@
 # HANDOFF: gks-core — Conformance Patches & Validation Harness
+
+> **ERRATA / STATUS (2026-07-06, Engineering)** — kept verbatim below; read with these corrections:
+>
+> - **Path drift:** the Go module lives in `compiler/`, not `engine/`. Every `engine/…` reference below (and in `docker-compose.yml` comments) means `compiler/…`. The Makefile already points at `compiler/` — the WP-8 "phantom compiler/" repair is moot.
+> - **Missing referenced files:** `gks-core/CONFORMANCE-REVIEW.md`, `research/D0v5-formal-spec.md`, and `engineering/B1-kernel-schema.sql` are **not in this tree**. The G1–G10 findings survive only as summarized here and in `db/migrations/0002_hardening.sql` comments.
+> - **Work-queue state:** WP-1 (RBAC + append-only trigger, single `e_writer` role instead of the reader/writer pair) and WP-4's `kernel_instance_at()` landed in migration 0002. I9 injectivity (`UNIQUE(source_map.instance_pk)`) landed in migration 0003, but `source_map` is **unpopulated** — the WP-2 locus backfill in the ingesters is still open. WP-5 α-renamed CNF export is done (`cnf_export`, tested identity/order-independent). **Open: WP-2 backfill, WP-3 (Ê persistence — the big one), WP-4 CLI flags, WP-6, WP-7, WP-8.**
+> - Resolver determinism (I8 guard-ID tie-break) and the typed open-texture signal (`evaluator.BoundaryError`) are implemented with tests.
+
 **From:** Guild A (Research) → **To:** Claude Code (Engineering)
 **Version:** 2.0 (supersedes the v1 SQLite-MVP handoff — that plan is DEAD; a superior Go + PostgreSQL implementation now exists in `gks-core/` and all work continues there)
 **Binding frame:** `research/D0v5-formal-spec.md` (D0 v1.1, FROZEN) · `gks-core/spec/D1.1–D1.5` · review findings in `gks-core/CONFORMANCE-REVIEW.md`

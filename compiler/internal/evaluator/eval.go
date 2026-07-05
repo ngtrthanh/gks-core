@@ -8,6 +8,7 @@
 package evaluator
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -15,6 +16,26 @@ import (
 
 	"computable-governance/compiler/internal/kernel"
 )
+
+// BoundaryError signals that evaluation reached an open-texture boundary token
+// (D0 §7). It is NOT an evaluation failure: the token is deliberately
+// unresolved, and the caller must emit a CONDITIONAL verdict. Distinguish it
+// from genuine evaluator bugs with errors.As / IsBoundary.
+type BoundaryError struct {
+	Token string // stable boundary identifier (e.g. "OT-1")
+	Label string // source term (e.g. "appropriate")
+}
+
+func (e *BoundaryError) Error() string {
+	return fmt.Sprintf("eval: open-texture token %q (%q) is unresolved; conditional verdict required", e.Token, e.Label)
+}
+
+// IsBoundary reports whether err (anywhere in its chain) is a BoundaryError,
+// i.e. the correct outcome is a conditional verdict, not a failure.
+func IsBoundary(err error) bool {
+	var b *BoundaryError
+	return errors.As(err, &b)
+}
 
 // Kind tags a runtime Value.
 type Kind int
@@ -155,7 +176,7 @@ func Eval(e *kernel.Expr, env Environment) (Value, error) {
 		// Open texture (D0 §7): the token is deliberately unresolved. Evaluation
 		// cannot return a definite verdict — the caller must emit a conditional
 		// verdict. We signal this rather than fabricating a boolean.
-		return VBool(false), fmt.Errorf("eval: open-texture token %q (%q) is unresolved; conditional verdict required", e.Name, e.Label)
+		return VBool(false), &BoundaryError{Token: e.Name, Label: e.Label}
 	default:
 		return VBool(false), fmt.Errorf("eval: unknown op %q", e.Op)
 	}

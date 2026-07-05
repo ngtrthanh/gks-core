@@ -132,8 +132,8 @@ func main() {
 	// --- STEP 2: open-texture boundary → conditional verdict ---------------
 	fmt.Println("\n [2] EVALUATE n2b \"take appropriate action\"")
 	_, otErr := evaluator.Eval(n2b.Qualifier, env)
-	if otErr == nil {
-		log.Fatalf("expected a conditional verdict at OT-1, but evaluation resolved definitely")
+	if !evaluator.IsBoundary(otErr) {
+		log.Fatalf("expected an open-texture boundary signal at OT-1, got: %v", otErr)
 	}
 	fmt.Printf("     hit boundary token: %s (%q)\n", n2b.Qualifier.Name, n2b.Qualifier.Label)
 	fmt.Println("     VERDICT: CONDITIONAL — open texture unresolved; deferred to adjudication")

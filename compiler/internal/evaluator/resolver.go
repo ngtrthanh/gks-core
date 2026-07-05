@@ -45,11 +45,17 @@ func contains(xs []string, s string) bool {
 // considered highest-priority first; the first guard whose condition holds and
 // that references the norm decides the verdict. A higher-priority `defeats`
 // therefore disables the norm even if a lower-priority guard would activate it.
+//
+// I8 (determinism): equal priorities are tie-broken by guard ID, never by
+// input order — the verdict must not depend on DB row order or map iteration.
 func Resolve(normID string, guards []Guard, env Environment) (Resolution, error) {
 	ordered := make([]Guard, len(guards))
 	copy(ordered, guards)
-	sort.SliceStable(ordered, func(i, j int) bool {
-		return ordered[i].Priority > ordered[j].Priority
+	sort.Slice(ordered, func(i, j int) bool {
+		if ordered[i].Priority != ordered[j].Priority {
+			return ordered[i].Priority > ordered[j].Priority
+		}
+		return ordered[i].ID < ordered[j].ID
 	})
 
 	res := Resolution{NormID: normID, Verdict: "INACTIVE"}

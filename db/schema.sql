@@ -120,14 +120,15 @@ CREATE TRIGGER trg_kernel_instance_append_only
   FOR EACH ROW EXECUTE FUNCTION kernel_instance_append_only();
 
 -- G2: source map — bijective link to source U-coordinates (I9).
+-- UNIQUE(instance_pk) enforces I9 injectivity (see migrations/0003); totality
+-- (no unmapped kernel row) is asserted by the validation harness.
 CREATE TABLE IF NOT EXISTS source_map (
   id          uuid      PRIMARY KEY DEFAULT gen_random_uuid(),
-  instance_pk bigint    NOT NULL REFERENCES kernel_instance(pk) ON DELETE RESTRICT,
+  instance_pk bigint    NOT NULL UNIQUE REFERENCES kernel_instance(pk) ON DELETE RESTRICT,
   locus       text      NOT NULL,
   kind        text      NOT NULL,
   span        int4range NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_source_map_instance ON source_map(instance_pk);
 
 -- G4: temporal-validity view — all engine reads go through this function.
 CREATE OR REPLACE FUNCTION kernel_instance_at(tt timestamptz, tf timestamptz)

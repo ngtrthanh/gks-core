@@ -1,0 +1,45 @@
+# Governance Computing — service orchestration.
+# Phase 3.1 consolidation: the Python MVP compiler has been dropped. Layer E is
+# Go + PostgreSQL only. The `db` service is the sole anchor; the Go execution
+# engine (see engine/) connects to it over TCP on host port 5435.
+# Compose v2 schema (no top-level `version:` key).
+
+services:
+  # Execution-engine datastore for the Knowledge-Theory (K-hat) IR.
+  # TimescaleDB is intentionally NOT used: the kernel needs 2D bitemporal
+  # algebra (t_text x t_fact), not 1D time-series. Plain PostgreSQL + TSTZRANGE
+  # + btree_gist provides exactly that (see db/schema.sql).
+  db:
+    image: postgres:18.4-alpine
+    # Host AppArmor policy blocks the postgres user from creating its Unix
+    # socket in /var/run/postgresql (initdb bootstrap fails). Disabling the
+    # AppArmor profile for this container resolves it.
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      POSTGRES_DB: governance
+      POSTGRES_USER: governance
+      # SECURITY: no hardcoded secret. Supply POSTGRES_PASSWORD via a .env file
+      # or the shell environment; the default below is for local dev only.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-governance_dev}
+    # PORT CONFLICT AVOIDANCE: host already runs PostgreSQL on 5432, so map to
+    # 5435. Bound to localhost — the DB is not exposed off-host.
+    ports:
+      - "5435:5432"
+    volumes:
+      # PostgreSQL 18+ official image: mount the whole /var/lib/postgresql
+      # (data lands in a versioned subdir, e.g. /var/lib/postgresql/18/docker).
+      # Mounting the old /var/lib/postgresql/data path breaks on 18+.
+      - pg_data:/var/lib/postgresql
+      # DDL is applied once, on first initialization of an empty data volume.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U governance -d governance"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  pg_data:

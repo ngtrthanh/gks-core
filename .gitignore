@@ -1,0 +1,7 @@
+# Export artifacts and signing material — NEVER commit.
+# Contains the Ed25519 private key (export/ed25519_key.pem) and CNF dumps.
+/export/
+
+# Go build output
+/compiler/**/*.test
+*.out

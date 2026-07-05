@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -199,12 +200,39 @@ func getenv(key, def string) string {
 
 const insertSQL = `
 INSERT INTO kernel_instance (instance_id, constructor, payload, t_text, t_fact)
-VALUES ($1::uuid, $2, $3::jsonb, $4::tstzrange, $5::tstzrange)`
+VALUES ($1::uuid, $2, $3::jsonb, $4::tstzrange, $5::tstzrange)
+RETURNING pk`
+
+// I9: every kernel row gets exactly one source-map row, in the same tx.
+const sourceMapSQL = `
+INSERT INTO source_map (instance_pk, locus, kind, span)
+VALUES ($1, $2, $3, int4range(0, $4))`
+
+func base(p string) string {
+	for i := len(p) - 1; i >= 0; i-- {
+		if p[i] == '/' {
+			return p[i+1:]
+		}
+	}
+	return p
+}
+
+// backfillSQL maps an already-ingested instance (matched by its deterministic
+// UUID) to its source locus, inserting only where no source_map row exists.
+const backfillSQL = `
+INSERT INTO source_map (instance_pk, locus, kind, span)
+SELECT k.pk, $2, $3, int4range(0, $4)
+FROM kernel_instance k
+LEFT JOIN source_map s ON s.instance_pk = k.pk
+WHERE k.instance_id = $1::uuid AND s.id IS NULL`
 
 func main() {
+	backfill := flag.Bool("backfill-sourcemap", false,
+		"do not ingest; only insert missing source_map rows for instances previously ingested from this corpus (matched by deterministic UUID)")
+	flag.Parse()
 	path := "../data/125_VBHN-VPQH_672381.docx"
-	if len(os.Args) > 1 {
-		path = os.Args[1]
+	if flag.NArg() > 0 {
+		path = flag.Arg(0)
 	}
 
 	paras, err := docx.Paragraphs(path)
@@ -216,11 +244,17 @@ func main() {
 	fullLower := strings.ToLower(strings.Join(paras, "\n"))
 	domain, evidence, score := inferDomain(fullLower)
 
+	// Document token for source-map loci: the corpus file's base name.
+	docToken := strings.TrimSuffix(strings.TrimSuffix(base(path), ".docx"), ".DOCX")
+
 	// Structural walk + heuristic extraction.
 	type item struct {
-		id  string
-		c   kernel.Constructor
-		ext Extracted
+		id    string
+		c     kernel.Constructor
+		ext   Extracted
+		locus string
+		kind  string
+		span  int
 	}
 	var items []item
 	var chapter, article string
@@ -228,6 +262,7 @@ func main() {
 	temporalCount := 0
 
 	for i, p := range paras {
+		uKind := "clause"
 		switch {
 		case reChapter.MatchString(p):
 			chapter = p
@@ -235,6 +270,7 @@ func main() {
 		case reArticle.MatchString(p):
 			m := reArticle.FindStringSubmatch(p)
 			article = "Điều " + m[1]
+			uKind = "article"
 			// fall through: the article heading itself may be a norm (e.g. a
 			// prohibition heading), so we still classify it below.
 		}
@@ -257,7 +293,16 @@ func main() {
 			AST:      buildAST(modality, iso),
 		}
 		id := detUUID(fmt.Sprintf("%s|%d|%s", article, i, p))
-		items = append(items, item{id: id, c: c, ext: ext})
+		art := article
+		if art == "" {
+			art = "preamble"
+		}
+		items = append(items, item{
+			id: id, c: c, ext: ext,
+			locus: fmt.Sprintf("%s : %s ¶%d", docToken, art, i),
+			kind:  uKind,
+			span:  len([]rune(p)),
+		})
 		counts[c]++
 	}
 
@@ -300,18 +345,36 @@ func main() {
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	inserted := 0
-	for _, it := range items {
-		raw, err := json.Marshal(it.ext)
-		if err != nil {
-			log.Fatalf("marshal: %v", err)
+	if *backfill {
+		for _, it := range items {
+			tag, err := tx.Exec(ctx, backfillSQL, it.id, it.locus, it.kind, it.span)
+			if err != nil {
+				log.Fatalf("backfill source_map %s: %v", it.id, err)
+			}
+			inserted += int(tag.RowsAffected())
 		}
-		if _, err := tx.Exec(ctx, insertSQL, it.id, string(it.c), string(raw), validity, validity); err != nil {
-			log.Fatalf("insert %s (%s): %v", it.id, it.c, err)
+	} else {
+		for _, it := range items {
+			raw, err := json.Marshal(it.ext)
+			if err != nil {
+				log.Fatalf("marshal: %v", err)
+			}
+			var pk int64
+			if err := tx.QueryRow(ctx, insertSQL, it.id, string(it.c), string(raw), validity, validity).Scan(&pk); err != nil {
+				log.Fatalf("insert %s (%s): %v", it.id, it.c, err)
+			}
+			if _, err := tx.Exec(ctx, sourceMapSQL, pk, it.locus, it.kind, it.span); err != nil {
+				log.Fatalf("source_map %s: %v", it.id, err)
+			}
+			inserted++
 		}
-		inserted++
 	}
 	if err := tx.Commit(ctx); err != nil {
 		log.Fatalf("commit: %v", err)
+	}
+	if *backfill {
+		fmt.Printf(" Backfilled %d source_map rows (existing instances, I9).\n", inserted)
+		return
 	}
 	fmt.Printf(" Ingested %d instances into kernel_instance with [now, infinity).\n", inserted)
 

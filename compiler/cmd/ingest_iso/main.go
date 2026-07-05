@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -138,16 +139,48 @@ func getenv(key, def string) string {
 	return def
 }
 
+// locusFor returns the D8 Run-2 §6 source-map coordinates. D8 lists n2a…n2d
+// (8.7.1/8.7.2 clauses) and p1 (8.7.1(c) concession, inline) explicitly; c2,
+// c3, g3 anchor to their host clauses.
+func locusFor(id string) (locus, kind string) {
+	switch id {
+	case idN2a, idN2b, idN2c:
+		return "iso9001 : 8.7.1", "clause"
+	case idN2d, idC3:
+		return "iso9001 : 8.7.2", "clause"
+	case idP1:
+		return "iso9001 : 8.7.1(c)-concession", "inline"
+	case idC2:
+		return "iso9001 : 8.7.1", "classification"
+	case idG3:
+		return "iso9001 : 8.7.1", "condition-span"
+	}
+	return "iso9001 : 8.7", "clause"
+}
+
 const insertSQL = `
 INSERT INTO kernel_instance (instance_id, constructor, payload, t_text, t_fact)
-VALUES ($1::uuid, $2, $3::jsonb, $4::tstzrange, $5::tstzrange)`
+VALUES ($1::uuid, $2, $3::jsonb, $4::tstzrange, $5::tstzrange)
+RETURNING pk`
+
+// I9: every kernel row gets exactly one source-map row, in the same tx.
+const sourceMapSQL = `
+INSERT INTO source_map (instance_pk, locus, kind, span)
+VALUES ($1, $2, $3, int4range($4, $5))`
+
+// backfillSQL inserts the source-map row for an already-ingested instance,
+// only where none exists (I9 backfill; span = stored payload length).
+const backfillSQL = `
+INSERT INTO source_map (instance_pk, locus, kind, span)
+SELECT k.pk, $2, $3, int4range(0, length(k.payload::text))
+FROM kernel_instance k
+LEFT JOIN source_map s ON s.instance_pk = k.pk
+WHERE k.instance_id = $1::uuid AND s.id IS NULL`
 
 func main() {
-	now := time.Now().UTC()
-	validity, err := kernel.Since(now).Value()
-	if err != nil {
-		log.Fatalf("range literal: %v", err)
-	}
+	backfill := flag.Bool("backfill-sourcemap", false,
+		"do not ingest; only insert missing source_map rows for the Run-2 instances")
+	flag.Parse()
 
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, connString())
@@ -155,6 +188,26 @@ func main() {
 		log.Fatalf("connect: %v", err)
 	}
 	defer conn.Close(ctx)
+
+	if *backfill {
+		n := 0
+		for _, id := range []string{idN2a, idC2, idN2b, idN2c, idN2d, idC3, idP1, idG3} {
+			locus, kind := locusFor(id)
+			tag, err := conn.Exec(ctx, backfillSQL, id, locus, kind)
+			if err != nil {
+				log.Fatalf("backfill %s: %v", id, err)
+			}
+			n += int(tag.RowsAffected())
+		}
+		log.Printf("backfilled %d source_map rows (D8 Run 2, I9)", n)
+		return
+	}
+
+	now := time.Now().UTC()
+	validity, err := kernel.Since(now).Value()
+	if err != nil {
+		log.Fatalf("range literal: %v", err)
+	}
 
 	tx, err := conn.Begin(ctx)
 	if err != nil {
@@ -167,10 +220,15 @@ func main() {
 		if err != nil {
 			log.Fatalf("marshal %s: %v", s.c, err)
 		}
-		if _, err := tx.Exec(ctx, insertSQL, s.id, string(s.c), string(raw), validity, validity); err != nil {
+		var pk int64
+		if err := tx.QueryRow(ctx, insertSQL, s.id, string(s.c), string(raw), validity, validity).Scan(&pk); err != nil {
 			log.Fatalf("insert %s %s: %v", s.c, s.id, err)
 		}
-		log.Printf("ingested %-3s %s", s.c, s.id)
+		locus, kind := locusFor(s.id)
+		if _, err := tx.Exec(ctx, sourceMapSQL, pk, locus, kind, 0, len(raw)); err != nil {
+			log.Fatalf("source_map %s: %v", s.id, err)
+		}
+		log.Printf("ingested %-3s %s  ⟦%s : %s⟧", s.c, s.id, locus, kind)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

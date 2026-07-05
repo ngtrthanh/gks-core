@@ -2,6 +2,18 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-06 — WP-2
+
+- **ingesters populate `source_map` (I9 totality):** all three ingest
+  commands insert one source-map row per kernel row in the same transaction
+  (D8 §6 loci for Runs 1–2; `⟦corpus : Điều N ¶i : article|clause⟧` for docx).
+  Each gains a `-backfill-sourcemap` mode that maps previously-ingested
+  instances (docx rows matched by re-running the deterministic extraction
+  walk); the live store's 404 rows are fully mapped.
+- **invariant test suite started** (`internal/invariants`, skips without a
+  DB): I2 UPDATE/DELETE rejected, I9 injectivity, I9 totality.
+- CNF export re-sealed: records now carry real loci in their content key.
+
 ## 2026-07-06
 
 - **Repository put under git**; baseline commit of the Phase 3.5 tree.

@@ -10,6 +10,7 @@ package evaluator
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -44,6 +45,7 @@ const (
 	KBool Kind = iota
 	KInt
 	KStr
+	KRat // exact rational (math/big); the quantitative domain of VAL
 )
 
 // Value is the result of evaluating a T expression.
@@ -52,16 +54,20 @@ type Value struct {
 	B    bool
 	I    int64
 	S    string
+	R    *big.Rat
 }
 
 func VBool(b bool) Value  { return Value{Kind: KBool, B: b} }
 func VInt(i int64) Value  { return Value{Kind: KInt, I: i} }
 func VStr(s string) Value { return Value{Kind: KStr, S: s} }
+func VRat(r *big.Rat) Value {
+	return Value{Kind: KRat, R: r}
+}
 
 // Bool coerces to a boolean (only a true KBool is true).
 func (v Value) Bool() bool { return v.Kind == KBool && v.B }
 
-// Int coerces to an integer (bools map to 1/0).
+// Int coerces to an integer (bools map to 1/0; rationals truncate).
 func (v Value) Int() int64 {
 	switch v.Kind {
 	case KInt:
@@ -70,8 +76,31 @@ func (v Value) Int() int64 {
 		if v.B {
 			return 1
 		}
+	case KRat:
+		return new(big.Int).Quo(v.R.Num(), v.R.Denom()).Int64()
 	}
 	return 0
+}
+
+// Rat promotes any numeric value to an exact rational (non-numeric → nil).
+func (v Value) Rat() *big.Rat {
+	switch v.Kind {
+	case KRat:
+		return v.R
+	case KInt:
+		return new(big.Rat).SetInt64(v.I)
+	case KBool:
+		if v.B {
+			return big.NewRat(1, 1)
+		}
+		return new(big.Rat)
+	}
+	return nil
+}
+
+// numeric reports whether the value participates in arithmetic/ordering.
+func (v Value) numeric() bool {
+	return v.Kind == KInt || v.Kind == KRat || v.Kind == KBool
 }
 
 func (v Value) String() string {
@@ -82,6 +111,8 @@ func (v Value) String() string {
 		return strconv.FormatInt(v.I, 10)
 	case KBool:
 		return strconv.FormatBool(v.B)
+	case KRat:
+		return v.R.RatString()
 	}
 	return ""
 }
@@ -166,6 +197,8 @@ func Eval(e *kernel.Expr, env Environment) (Value, error) {
 		return evalCmp(e, env)
 	case kernel.OpArith:
 		return evalArith(e, env)
+	case kernel.OpRatio:
+		return evalRatio(e, env)
 	case kernel.OpPred:
 		return evalPred(e, env)
 	case kernel.OpWindow:
@@ -199,8 +232,34 @@ func evalLit(l *kernel.Lit) (Value, error) {
 		return VInt(*l.Int), nil
 	case l.Str != nil:
 		return VStr(*l.Str), nil
+	case l.Rat != nil:
+		r, ok := new(big.Rat).SetString(*l.Rat)
+		if !ok {
+			return VBool(false), fmt.Errorf("eval: malformed rational literal %q", *l.Rat)
+		}
+		return VRat(r), nil
 	}
 	return VBool(false), fmt.Errorf("eval: malformed literal")
+}
+
+// evalRatio computes the exact rational num/den (denominator must be non-zero).
+func evalRatio(e *kernel.Expr, env Environment) (Value, error) {
+	l, err := Eval(arg(e, 0), env)
+	if err != nil {
+		return l, err
+	}
+	r, err := Eval(arg(e, 1), env)
+	if err != nil {
+		return r, err
+	}
+	num, den := l.Rat(), r.Rat()
+	if num == nil || den == nil {
+		return VBool(false), fmt.Errorf("eval: ratio requires numeric operands, got %v / %v", l.Kind, r.Kind)
+	}
+	if den.Sign() == 0 {
+		return VBool(false), fmt.Errorf("eval: ratio division by zero")
+	}
+	return VRat(new(big.Rat).Quo(num, den)), nil
 }
 
 func evalCmp(e *kernel.Expr, env Environment) (Value, error) {
@@ -218,20 +277,40 @@ func evalCmp(e *kernel.Expr, env Environment) (Value, error) {
 		}
 		return VBool(false), fmt.Errorf("eval: comparator %q not defined on strings", e.Cmp)
 	}
-	a, b := l.Int(), r.Int()
-	switch e.Cmp {
-	case kernel.CmpLT:
-		return VBool(a < b), nil
-	case kernel.CmpLE:
-		return VBool(a <= b), nil
-	case kernel.CmpEQ:
-		return VBool(a == b), nil
-	case kernel.CmpGE:
-		return VBool(a >= b), nil
-	case kernel.CmpGT:
-		return VBool(a > b), nil
+	// Exact-rational ordering whenever either side is rational; otherwise
+	// integer ordering. Both are exact — no float64 on the verdict path (I8).
+	if l.Kind == KRat || r.Kind == KRat {
+		if !l.numeric() || !r.numeric() {
+			return VBool(false), fmt.Errorf("eval: comparator %q needs numeric operands", e.Cmp)
+		}
+		return cmpFromSign(e.Cmp, l.Rat().Cmp(r.Rat()))
 	}
-	return VBool(false), fmt.Errorf("eval: unknown comparator %q", e.Cmp)
+	a, b := l.Int(), r.Int()
+	sign := 0
+	switch {
+	case a < b:
+		sign = -1
+	case a > b:
+		sign = 1
+	}
+	return cmpFromSign(e.Cmp, sign)
+}
+
+// cmpFromSign maps a three-way comparison sign (-1,0,1) to a comparator result.
+func cmpFromSign(cmp string, sign int) (Value, error) {
+	switch cmp {
+	case kernel.CmpLT:
+		return VBool(sign < 0), nil
+	case kernel.CmpLE:
+		return VBool(sign <= 0), nil
+	case kernel.CmpEQ:
+		return VBool(sign == 0), nil
+	case kernel.CmpGE:
+		return VBool(sign >= 0), nil
+	case kernel.CmpGT:
+		return VBool(sign > 0), nil
+	}
+	return VBool(false), fmt.Errorf("eval: unknown comparator %q", cmp)
 }
 
 func evalArith(e *kernel.Expr, env Environment) (Value, error) {
@@ -242,6 +321,28 @@ func evalArith(e *kernel.Expr, env Environment) (Value, error) {
 	r, err := Eval(arg(e, 1), env)
 	if err != nil {
 		return r, err
+	}
+	// Rational arithmetic whenever either operand is rational (e.g. a VAL
+	// target 0.95 × reg(threshold)); exact throughout.
+	if l.Kind == KRat || r.Kind == KRat {
+		if !l.numeric() || !r.numeric() {
+			return VBool(false), fmt.Errorf("eval: arithmetic %q needs numeric operands", e.Arith)
+		}
+		x, y := l.Rat(), r.Rat()
+		switch e.Arith {
+		case kernel.ArithAdd:
+			return VRat(new(big.Rat).Add(x, y)), nil
+		case kernel.ArithSub:
+			return VRat(new(big.Rat).Sub(x, y)), nil
+		case kernel.ArithMul:
+			return VRat(new(big.Rat).Mul(x, y)), nil
+		case kernel.ArithDiv:
+			if y.Sign() == 0 {
+				return VBool(false), fmt.Errorf("eval: division by zero")
+			}
+			return VRat(new(big.Rat).Quo(x, y)), nil
+		}
+		return VBool(false), fmt.Errorf("eval: unknown arithmetic operator %q", e.Arith)
 	}
 	a, b := l.Int(), r.Int()
 	switch e.Arith {

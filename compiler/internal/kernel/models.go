@@ -393,12 +393,24 @@ type PWRPayload struct {
 	Event         string      `json:"event"`
 }
 
-// VALPayload — governed quantitative binding (function ⊕ unit cmp target).
+// VALPayload — governed quantitative binding: the measured quantity satisfies
+// `Measure <Comparator> Target`. Both Measure and Target are T-expressions
+// evaluated to EXACT rationals (Measure is typically a Ratio; Target may be
+// arithmetic over a registry Lookup, e.g. 0.95 × reg(threshold) — the D8 Run 6
+// "normative reference embedded in a formula" pattern). No float64 anywhere:
+// verdicts over VAL are bit-for-bit reproducible (WP-7, I8).
 type VALPayload struct {
-	Function   string  `json:"function"`
-	Unit       string  `json:"unit"`
-	Comparator string  `json:"comparator"`
-	Target     float64 `json:"target"`
+	Function   string `json:"function"`   // human label, e.g. "on_time_logging_rate"
+	Unit       string `json:"unit"`       // e.g. "ratio", "%"
+	Comparator string `json:"comparator"` // one of the T CmpOp tokens
+	Measure    *Expr  `json:"measure"`    // the evaluated quantity (rational)
+	Target     *Expr  `json:"target"`     // the target quantity (rational)
+}
+
+// AsExpr projects a VAL binding to the boolean T-expression `Measure cmp
+// Target`, so it evaluates through the ordinary big-step evaluator.
+func (v VALPayload) AsExpr() *Expr {
+	return &Expr{Op: OpCmp, Cmp: v.Comparator, Args: []*Expr{v.Measure, v.Target}}
 }
 
 // REFPayload — typed cross-corpus designation.

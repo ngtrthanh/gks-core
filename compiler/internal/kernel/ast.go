@@ -23,6 +23,7 @@ const (
 	OpPred     Op = "pred"     // holds(state)/event(name) — read-only predicate
 	OpCount    Op = "count"    // bounded quantifier
 	OpWindow   Op = "window"   // past-time temporal window
+	OpRatio    Op = "ratio"    // exact rational division num/den (VAL, I8)
 	OpBoundary Op = "boundary" // open-texture token (D0 §7): opaque, unresolved predicate
 )
 
@@ -43,11 +44,14 @@ const (
 	ArithDiv = "/"
 )
 
-// Lit is a ground literal; exactly one field is non-nil.
+// Lit is a ground literal; exactly one field is non-nil. Rat carries an EXACT
+// rational as a canonical string ("19/20", "0.95", "100") — never a float64,
+// so quantitative (VAL) evaluation is bit-for-bit reproducible (I8).
 type Lit struct {
 	Bool *bool   `json:"bool,omitempty"`
 	Int  *int64  `json:"int,omitempty"`
 	Str  *string `json:"str,omitempty"`
+	Rat  *string `json:"rat,omitempty"`
 }
 
 // Count is a BOUNDED quantifier: `count(domain where Where) Cmp Bound`.
@@ -95,6 +99,14 @@ func LitInt(v int64) *Expr { return &Expr{Op: OpLit, Lit: &Lit{Int: &v}} }
 
 // LitStr builds a string literal.
 func LitStr(v string) *Expr { return &Expr{Op: OpLit, Lit: &Lit{Str: &v}} }
+
+// LitRat builds an exact rational literal from a canonical string ("19/20",
+// "0.95", "100"). The string is stored verbatim; the evaluator parses it with
+// math/big — no float64 ever appears (I8).
+func LitRat(v string) *Expr { return &Expr{Op: OpLit, Lit: &Lit{Rat: &v}} }
+
+// Ratio builds an exact rational division num/den.
+func Ratio(num, den *Expr) *Expr { return &Expr{Op: OpRatio, Args: []*Expr{num, den}} }
 
 // Var references a bound identifier.
 func Var(name string) *Expr { return &Expr{Op: OpVar, Name: name} }

@@ -54,14 +54,16 @@ Commands (all Go, stdlib + pgx; run with the `db` service up):
 | `simulate_case` | D8 Run 1 in-memory verdict trace (pre-Ê demo; superseded by `replay_d8`) |
 | `simulate_iso` | D8 Run 2 in-memory concession workflow (pre-Ê demo; superseded by `replay_d8`) |
 | `replay_d8` | Replay D8 traces through the **persisted** Ê layer → `verdict` rows |
+| `ingest_kpi` | Persist + evaluate D8 Run 6 VAL (exact-rational KPI vs referenced threshold) |
 | `cnf_export` | Deterministic α-renamed Canonical Normal Form dump (WP-5) |
 | `seal_export` / `verify_seal` | Detached Ed25519 signature over the CNF export |
 
 Known open gaps (tracked in `handoff.md`, in its severity order): temporal read
 discipline CLI flags (WP-4 partial — reads already go through `kernel_instance_at`),
-registry wiring + I4 test (WP-6), exact numeric VAL (WP-7 — `VALPayload.Target` is
-still `float64`), validation harness (WP-8). Done: WP-1 (RBAC + append-only),
-WP-2 (`source_map` population, I9), WP-3 (Ê persistence), WP-5 (α-renamed CNF).
+full registry-snapshot `Lookup` wiring + I4 rename-stability test (WP-6),
+validation harness (WP-8). Done: WP-1 (RBAC + append-only), WP-2 (`source_map`
+population, I9), WP-3 (Ê persistence), WP-5 (α-renamed CNF), WP-7 (exact-rational
+VAL — no float64 on the verdict path).
 
 ## Build & Run
 

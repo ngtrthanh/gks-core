@@ -2,6 +2,22 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-06 — WP-7
+
+- **Exact-rational VAL** (no float64 in verdict paths, I8): the evaluator gains
+  a `KRat` value kind (`math/big.Rat`), a rational literal (`Lit.Rat`,
+  `kernel.LitRat`) and an exact-division `OpRatio` (`kernel.Ratio`). Comparison
+  and arithmetic promote to exact rationals when either operand is rational.
+- `VALPayload` is now AST-driven — `Measure`/`Target` T-expressions and a
+  comparator, evaluated via `VALPayload.AsExpr()`; the old `Target float64`
+  field is gone.
+- **`cmd/ingest_kpi`** persists D8 Run 6 (KPI-SEC-03): registry threshold
+  `policy-p11-§4.threshold = 1` (append-only versioned, I4), v4 (VAL) and n7
+  (NRM). It reads the registry back and evaluates the target
+  `0.95 × reg(threshold)` exactly: 96/100 = 24/25 ≥ 19/20 → COMPLIANT,
+  94/100 = 47/50 < 19/20 → VIOLATED. The 0.945-vs-0.95 boundary (where a
+  float64 pipeline silently flips) is covered by unit tests.
+
 ## 2026-07-06 — WP-3
 
 - **Ê execution layer persisted** (migration `0004_e_layer.sql`): `world_event`

@@ -2,6 +2,29 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-06 — WP-3
+
+- **Ê execution layer persisted** (migration `0004_e_layer.sql`): `world_event`
+  (append-only trace), `e_machine` (θ over the frozen six-state alphabet),
+  `transition_log` (append-only journal; `pwr_instance` records the authorizing
+  power on every K̂-affecting write — the I2↔Ê wiring), `verdict` (each row
+  carries its `eval_t_text`/`eval_t_fact` coordinates, I6). θ changes only
+  through `transition_log`, enforced by triggers (checked: direct UPDATE/DELETE
+  of any journal table is rejected).
+- **`internal/machine`**: replays the event trace through the D1.4 rules
+  S-Activate / S-Defeat / S-Violate / S-Exercise. S-Exercise is the sole
+  K̂-extending path (operand GRD appended with a deterministic id + source_map).
+  Pure over ⟨event payloads, coordinates⟩; events replayed in
+  (occurred_at, event_id) order, domains sorted (I8). Resolver→verdict mapping
+  flagged `AGENT-0-DECISION-3`; no branching on the O|P|F trichotomy beyond
+  S-Violate (`AGENT-0-DECISION-2`).
+- **`cmd/replay_d8`** (`make replay-d8`): D8 Run 1 replays from `world_event`
+  to a persisted `compliant` verdict; Run 2's concession-record PWR exercise
+  appends the operand GRD, suspends n2a with `pwr_instance` set, and leaves
+  n2b `conditional` on OT-1 — all persisted end-to-end.
+- Invariant suite extended: I2 Ê-journal immutability. Unit tests for the
+  machine cover both runs, S-Violate, replay idempotency and order-independence.
+
 ## 2026-07-06 — WP-2
 
 - **ingesters populate `source_map` (I9 totality):** all three ingest

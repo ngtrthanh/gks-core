@@ -18,6 +18,7 @@ implementation (see `handoff.md` for the open work queue).
 | `db/` | PostgreSQL bitemporal K̂ store: baseline `schema.sql` + numbered migrations. | Working |
 | `compiler/` | Go reference implementation: kernel domain model, sub-Turing T evaluator, defeasible resolver, CNF export, ingest/simulate/verify commands. | Working |
 | `mechanization/` | Lean 4 / mathlib4 development for the D1.5 obligations. | Scaffold (compiles with `sorry`s; toolchain not wired into `make verify`) |
+| — | Ê execution layer: bitemporal event replay → persisted verdicts. | Working (`db/migrations/0004`, `compiler/internal/machine`, `cmd/replay_d8`) |
 | `validation/` | Reproducibility and inter-compiler agreement harnesses (Fleiss' $\kappa$, verdict agreement). | Not implemented |
 | `deliver/`, `D8.md` | Benchmark fixture narratives (D8 Runs) with expected outcomes. | Reference |
 | `data/` | Source corpora for ingestion (e.g. Vietnamese consolidated statute .docx). | Reference |
@@ -50,17 +51,17 @@ Commands (all Go, stdlib + pgx; run with the `db` service up):
 | `ingest_iso` | Persist D8 Run 2 (ISO 9001:2015 §8.7) incl. PWR + open-texture boundary |
 | `ingest_docx` | Unsupervised structural ingestion of a legal .docx corpus |
 | `verify_db` | Read-only report of stored instances (identity, TIX bounds, AST) |
-| `simulate_case` | D8 Run 1 execution-layer simulation → verdict trace |
-| `simulate_iso` | D8 Run 2 concession workflow (conditional verdict, PWR exercise, defeat) |
+| `simulate_case` | D8 Run 1 in-memory verdict trace (pre-Ê demo; superseded by `replay_d8`) |
+| `simulate_iso` | D8 Run 2 in-memory concession workflow (pre-Ê demo; superseded by `replay_d8`) |
+| `replay_d8` | Replay D8 traces through the **persisted** Ê layer → `verdict` rows |
 | `cnf_export` | Deterministic α-renamed Canonical Normal Form dump (WP-5) |
 | `seal_export` / `verify_seal` | Detached Ed25519 signature over the CNF export |
 
-Known open gaps (tracked in `handoff.md`, in its severity order): Ê persistence
-(`world_event` / `e_machine` / `transition_log` / `verdict` tables — WP-3, verdicts are
-currently computed in the simulate commands and not persisted), `source_map` population
-by the ingesters (WP-2 backfill; the I9 UNIQUE constraint is in place), temporal read
-discipline flags (WP-4 partial), registry wiring + I4 test (WP-6), exact numeric VAL
-(WP-7 — `VALPayload.Target` is still `float64`), validation harness (WP-8).
+Known open gaps (tracked in `handoff.md`, in its severity order): temporal read
+discipline CLI flags (WP-4 partial — reads already go through `kernel_instance_at`),
+registry wiring + I4 test (WP-6), exact numeric VAL (WP-7 — `VALPayload.Target` is
+still `float64`), validation harness (WP-8). Done: WP-1 (RBAC + append-only),
+WP-2 (`source_map` population, I9), WP-3 (Ê persistence), WP-5 (α-renamed CNF).
 
 ## Build & Run
 

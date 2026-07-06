@@ -12,7 +12,7 @@ EXPORT_DIR    := export
 SPEC_FILES    := $(wildcard $(SPEC_DIR)/D1.*.md)
 
 .DEFAULT_GOAL := help
-.PHONY: help spec verify test-compiler cnf-export seal verify-seal validate clean
+.PHONY: help spec verify test-compiler replay-d8 cnf-export seal verify-seal validate clean
 
 help: ## Show available targets
 	@echo "Governance Computing — formal repository"
@@ -20,6 +20,7 @@ help: ## Show available targets
 	@echo "  make spec           Validate/render the D1 specification documents"
 	@echo "  make verify         Run Lean 4 mechanization (placeholder)"
 	@echo "  make test-compiler  Run the reference-compiler (Go) test suite"
+	@echo "  make replay-d8      Replay the D8 benchmark traces through the persisted E-layer"
 	@echo "  make cnf-export     Dump the store in Canonical Normal Form to $(EXPORT_DIR)/dump.cnf"
 	@echo "  make seal           Ed25519-sign the CNF export ($(EXPORT_DIR)/dump.cnf.sig)"
 	@echo "  make verify-seal    Verify the CNF export seal (AUTHENTIC/TAMPERED)"
@@ -39,6 +40,10 @@ verify: ## Run the Lean 4 mechanization over the proof obligations (D1.5)
 test-compiler: ## Run the reference-compiler (Go) test suite
 	@echo "[test-compiler] go test ./... in $(COMPILER_DIR)/ ..."
 	cd $(COMPILER_DIR) && go vet ./... && go test ./...
+
+replay-d8: ## Replay the D8 event traces through Ê -> persisted verdicts (WP-3)
+	@echo "[replay-d8] world_event -> e_machine/transition_log/verdict"
+	cd $(COMPILER_DIR) && go run ./cmd/replay_d8
 
 cnf-export: ## Dump the store in Canonical Normal Form (deterministic, I8)
 	@mkdir -p $(EXPORT_DIR)

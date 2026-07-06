@@ -83,6 +83,45 @@ func TestI9Injectivity(t *testing.T) {
 	}
 }
 
+// I2 (Ê journal): the execution-layer history is immutable and θ changes only
+// through the transition_log. Direct mutation of any journal table is rejected.
+func TestI2ELayerJournal(t *testing.T) {
+	conn := connect(t)
+	ctx := context.Background()
+
+	var hasTable bool
+	if err := conn.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'e_machine')`,
+	).Scan(&hasTable); err != nil {
+		t.Fatalf("probe: %v", err)
+	}
+	if !hasTable {
+		t.Skip("Ê layer not migrated; apply db/migrations/0004_e_layer.sql")
+	}
+
+	cases := []struct {
+		name, sql string
+	}{
+		{"world_event UPDATE", `UPDATE world_event SET event_type = 'x'`},
+		{"world_event DELETE", `DELETE FROM world_event WHERE true`},
+		{"transition_log UPDATE", `UPDATE transition_log SET to_state = 'discharged'`},
+		{"transition_log DELETE", `DELETE FROM transition_log WHERE true`},
+		{"e_machine direct state UPDATE", `UPDATE e_machine SET state = 'discharged'`},
+		{"e_machine DELETE", `DELETE FROM e_machine WHERE true`},
+	}
+	for _, c := range cases {
+		// Each in its own tx so a rejection does not poison the next.
+		tx, err := conn.Begin(ctx)
+		if err != nil {
+			t.Fatalf("begin: %v", err)
+		}
+		if _, err := tx.Exec(ctx, c.sql); err == nil {
+			t.Errorf("%s succeeded; Ê journal integrity not enforced", c.name)
+		}
+		_ = tx.Rollback(ctx)
+	}
+}
+
 // I9 (totality): every kernel row has a source_map row.
 func TestI9Totality(t *testing.T) {
 	conn := connect(t)

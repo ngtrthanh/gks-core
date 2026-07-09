@@ -87,8 +87,10 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
    already clause-atomic (segmentation ×1.00, 0 multi-modal); two fresh
    classifiers agree at κ=0.8380 (> the 0.7877 stored baseline), so the residual
    gap is *semantic cue modelling*, not structural splitting.
-5. **Pending Agent-0 decisions** (unchanged): TIX-enum drop vs. handoff §6;
-   NRM Force O|P|F trichotomy; resolver→verdict mapping.
+5. **Pending Agent-0 decisions** — now documented as a formal decision request in
+   `AGENT-0-DECISIONS.md` (TIX-enum vs. columnar; NRM Force O|P|F trichotomy;
+   resolver→verdict mapping), each with options + advisory recommendation. Not
+   self-resolved; provisional behavior holds until Agent 0 rules.
 
 ## 6. Recommended next steps (priority order)
 

@@ -2,6 +2,27 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — Continuous-ingestion control plane (8.4)
+
+- **Milestone: one-shot ingestion → a repeatable, idempotent, ledgered pipeline.**
+  - `db/migrations/0006_ingestion_ledger.sql` + `schema.sql`: append-only
+    `ingestion_run` ledger (corpus, source_digest, instances before/after,
+    outcome, ran_at); `e_writer` INSERT/SELECT. Applied to the live DB.
+  - `cmd/ingest_run`: manifest-driven (`data/corpora.json`) control plane that
+    classifies each corpus by SHA-256 vs the latest ledger entry as
+    NEW / CHANGED / UP-TO-DATE. `--reconcile` records the current digest as the
+    baseline without ingesting; `--apply` ingests NEW/CHANGED only and **skips
+    UP-TO-DATE** (safe no-op). Dry-run by default. Prints the Registry Law status.
+  - Idempotency lives in the control plane by design: `kernel_instance`'s
+    `no_overlapping_text_validity` EXCLUDE constraint rejects overlapping
+    re-inserts, so re-invoking an ingester on an unchanged corpus is neither safe
+    nor needed — the ledger makes a scheduled re-run a no-op.
+  - `make ingest` (dry-run) / `make ingest-apply`.
+- **Verified:** dry-run→NEW, `--reconcile`→baseline, dry-run→UP-TO-DATE,
+  `--apply`→idempotent skip (0-delta, exit 0), Registry Law HELD (basis=6)
+  throughout; ledger audit trail present. `go build/vet/test ./...` green.
+- `PROGRESS.md` 8.4 → 🟢 Substantial.
+
 ## 2026-07-09 — Agent-0 constitutional rulings implemented
 
 Three pending constitutional decisions (see `AGENT-0-DECISIONS.md`) were ruled by

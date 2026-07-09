@@ -1,6 +1,6 @@
 # PROGRESS REPORT — gks-core vs. the D0 Maturity Roadmap
 
-**Date:** 2026-07-09 UTC (current through tag `v0.6.0`) · **Author:** Kiro (Engineering)
+**Date:** 2026-07-09 UTC (current through tag `v0.7.0`) · **Author:** Kiro (Engineering)
 **Baselines:** `spec/D0v5.md` (D0 v1.1, FROZEN), `spec/D1.1–D1.5`,
 `handoff.md`/`handoff2.md`/`handoff3.md`, `CHANGELOG.md`.
 **Verification basis:** `go build/vet/test ./...` green; live dev DB (Postgres 18,
@@ -36,7 +36,7 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
 | **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. **Track D datapoint:** two *fresh* independent classifiers agree at κ=0.8380 (`cmd/trackd`), isolating the Track B gap to the older stored assignments rather than textual ambiguity. |
 | **8.3 Formal Mechanization** | 🟢 **Met (tractable set)** | T2 (I1), T3 (I8), T6 (I2), T8 (I7) are mathlib-free Lean proofs that **compile in CI** (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`). I5 and additional I7 content are also **Go-tested** over the store. Open: T1/C1 research conjectures. |
-| **8.4 Continuous Ingestion** | 🟡 **Partial** | Store spans **4 real normative domains** (VN labour statute, ISO 9001, US tax §121, KPI/policy). `TestRegistryLawBoundedBasisAcrossDomains` proves the basis stays = B (6 constructors, Θ(1)) across all domains — no domain adds a constructor. **Track D (2026-07-09):** corpus is already clause-atomic (`cmd/trackd`, segmentation ×1.00). **Gap:** ingestion is not yet *continuous*/automated (one-shot per corpus); residual classifier disagreement is semantic (cue modelling). |
+| **8.4 Continuous Ingestion** | 🟢 **Substantial** | Store spans **4 real normative domains**; `TestRegistryLawBoundedBasisAcrossDomains` proves basis = B (Θ(1)) across all. **Continuous control plane** (`cmd/ingest_run` + `ingestion_run` ledger, migration 0006): manifest-driven, **digest-idempotent**, ledgered — a re-run over an unchanged corpus is a safe no-op (UP-TO-DATE→skip; verified 0-delta with Registry Law HELD). Idempotency is enforced in the control plane because `kernel_instance`'s EXCLUDE constraint rejects overlapping re-inserts. **Track D:** corpus already clause-atomic. **Gap:** scheduling is external (cron/CI); one unsupervised corpus so far. |
 
 ---
 
@@ -112,9 +112,10 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 3. ~~**Track D** extraction depth~~ — **DONE** 2026-07-09 (`cmd/trackd`): corpus
    already clause-atomic; lever redirected to cue modelling. See
    `validation/trackd/REPORT.md`.
-4. **Continuous ingestion** — multi-domain Registry Law now **tested**
-   (`TestRegistryLawBoundedBasisAcrossDomains`, 4 real domains, basis = B). Still
-   open: *automated/continuous* ingestion (currently one-shot per corpus).
+4. ~~**Continuous ingestion**~~ — **DONE** 2026-07-09: `cmd/ingest_run` +
+   `ingestion_run` ledger (migration 0006) give a manifest-driven, digest-
+   idempotent, ledgered pipeline (re-run = safe no-op). Remaining polish:
+   external scheduling (cron/CI) and additional corpora.
 5. ~~Escalate the three Agent-0 decisions~~ — **RULED & implemented** 2026-07-09
    (TIX index / obligation-only NRM / first-class `DEFEATED`); see
    `AGENT-0-DECISIONS.md`.

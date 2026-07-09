@@ -291,3 +291,19 @@ CREATE TRIGGER trg_e_machine_guard
 -- θ updates happen only through the transition trigger.
 GRANT SELECT, INSERT ON world_event, transition_log, verdict TO e_writer;
 GRANT SELECT, INSERT, UPDATE ON e_machine TO e_writer;
+
+-- ---- Continuous-ingestion ledger (migration 0006) --------------------------
+-- Append-only record of ingestion runs; idempotency is by source_digest.
+CREATE TABLE IF NOT EXISTS ingestion_run (
+  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  corpus           text        NOT NULL,
+  source_path      text        NOT NULL,
+  source_digest    text        NOT NULL,
+  ingester         text        NOT NULL,
+  instances_before integer     NOT NULL,
+  instances_after  integer     NOT NULL,
+  outcome          text        NOT NULL CHECK (outcome IN ('ingested','reconciled','skipped')),
+  ran_at           timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_ingestion_run_corpus ON ingestion_run (corpus, ran_at DESC);
+GRANT SELECT, INSERT ON ingestion_run TO e_writer;

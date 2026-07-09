@@ -12,3 +12,4 @@
 # Generated interop CNF exports (regenerate via `go run ./cmd/interop`)
 /validation/interop/*.cnf
 /compiler/trackd
+/compiler/ingest_run

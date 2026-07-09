@@ -12,7 +12,7 @@ EXPORT_DIR    := export
 SPEC_FILES    := $(wildcard $(SPEC_DIR)/D1.*.md)
 
 .DEFAULT_GOAL := help
-.PHONY: help spec verify test-compiler replay-d8 cnf-export seal verify-seal validate clean
+.PHONY: help spec verify test-compiler replay-d8 cnf-export seal verify-seal validate ingest ingest-apply clean
 
 help: ## Show available targets
 	@echo "Governance Computing — formal repository"
@@ -66,6 +66,13 @@ verify-seal: ## Verify the CNF export seal (AUTHENTIC/TAMPERED)
 validate: ## Run reproducibility and inter-compiler agreement harnesses
 	@echo "[validate] Fleiss' kappa / verdict-agreement (floors: kappa>=0.70, VA>=0.90)"
 	cd $(COMPILER_DIR) && go run ./cmd/validate ../$(VALIDATION_DIR)/testdata
+
+ingest: ## Continuous-ingestion control plane: report NEW/CHANGED/UP-TO-DATE (dry-run)
+	@echo "[ingest] dry-run over data/corpora.json (no writes)"
+	cd $(COMPILER_DIR) && go run ./cmd/ingest_run
+
+ingest-apply: ## Ingest NEW/CHANGED corpora, skip UP-TO-DATE (idempotent), ledger each run
+	cd $(COMPILER_DIR) && go run ./cmd/ingest_run --apply
 
 clean: ## Remove build artifacts
 	@echo "[clean] nothing to remove (no build artifacts yet)"

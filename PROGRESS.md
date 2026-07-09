@@ -31,7 +31,7 @@ port 5435); `make validate` PASS; `cmd/interop`, `cmd/falsify` run.
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
 | **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. |
 | **8.3 Formal Mechanization** | 🟡 **Partial** | I1/I8/I2 proofs written (Lean, mathlib-free); **compilation pending** a Lean toolchain in CI. I5, I7 not mechanized. |
-| **8.4 Continuous Ingestion** | 🟡 **Partial** | One unsupervised corpus (VN Labour Code) ingested; Registry Law held (basis stayed at 6, Θ(1)). **Track D finding (2026-07-09):** the corpus is already *clause-atomic* — `ingest_docx` extracts one instance per khoản/điểm, so structural segmentation recovers 0 further units and 0 stored unit is multi-modal (`cmd/trackd`). **Gap:** not continuous, not multi-domain; remaining classifier disagreement is semantic (cue modelling), not structural. |
+| **8.4 Continuous Ingestion** | 🟡 **Partial** | Store spans **4 real normative domains** (VN labour statute, ISO 9001, US tax §121, KPI/policy). `TestRegistryLawBoundedBasisAcrossDomains` proves the basis stays = B (6 constructors, Θ(1)) across all domains — no domain adds a constructor. **Track D (2026-07-09):** corpus is already clause-atomic (`cmd/trackd`, segmentation ×1.00). **Gap:** ingestion is not yet *continuous*/automated (one-shot per corpus); residual classifier disagreement is semantic (cue modelling). |
 
 ---
 
@@ -100,6 +100,7 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 3. ~~**Track D** extraction depth~~ — **DONE** 2026-07-09 (`cmd/trackd`): corpus
    already clause-atomic; lever redirected to cue modelling. See
    `validation/trackd/REPORT.md`.
-4. Broaden **continuous ingestion** to a second domain to genuinely exercise the
-   Registry Law.
+4. **Continuous ingestion** — multi-domain Registry Law now **tested**
+   (`TestRegistryLawBoundedBasisAcrossDomains`, 4 real domains, basis = B). Still
+   open: *automated/continuous* ingestion (currently one-shot per corpus).
 5. Escalate the three Agent-0 decisions for a ruling.

@@ -2,6 +2,17 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — Registry Law verified across heterogeneous domains
+
+- **Milestone (`internal/invariants/registry_law_test.go`).**
+  `TestRegistryLawBoundedBasisAcrossDomains` proves the Θ(1) Registry Law over the
+  **4 real normative domains** already in the store — VN labour statute, ISO 9001,
+  US tax §121, KPI/policy (6 locus-domains incl. fixtures): every domain's
+  constructor set ⊆ B, and the union across all domains is exactly
+  `{CLS,GRD,NRM,PWR,REF,VAL}` (|B|=6). Adding domains adds no constructor.
+- `PROGRESS.md` 8.4 upgraded (multi-domain demonstrated; residual gap is
+  *automated/continuous* ingestion). `go build/vet/test ./...` green.
+
 ## 2026-07-09 — Track D: clause-level extraction-depth study
 
 - **Milestone (`cmd/trackd`, `validation/trackd/REPORT.md`).** Reads stored docx

@@ -2,6 +2,24 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — Lean proofs compile in CI; T8 (I7) discharged (Phase 2 tractable set)
+
+- **Milestone: the Lean mechanization is machine-verified.** New
+  `.github/workflows/lean.yml` installs elan on a GitHub runner (which reaches
+  the Lean toolchain that is blocked in the dev env) and runs `lake build` +
+  a guard asserting **zero `sorry`**. Green on Lean **4.31.0**.
+- **T8 (I7) discharged.** `strata_wellFounded` proved via the Lean-core instance
+  `Nat.lt_wfRel.wf` (no mathlib) — was `sorry`.
+- Now **CI-compiled**: T2 (I1, `eval_is_pure`), T3 (I8, `eval_deterministic`),
+  T6 (I2, `append_only_monotone`), T8 (I7, `strata_wellFounded`).
+- Fixed a latent error surfaced by the first real compile: `Semantics.lean` had
+  its `import` after the module docstring (Lean requires imports first).
+- `spec/D1.5` ledger: T2/T3/T6/T8 → **proved (CI-compiled)**; README + PROGRESS
+  updated — Phase 2's tractable set is done; 8.3 Formal Mechanization → 🟢. The
+  earlier "Lean toolchain blocked" gate is resolved (bypassed via GitHub runners).
+  Open Phase-2 items are now the research conjectures T1 (decidability) and
+  C1 (minimality).
+
 ## 2026-07-09 — Milestone loop complete; sole remaining gate = Lean toolchain
 
 - **Verifiable-here roadmap set is exhausted.** Every invariant I1–I9 now has a

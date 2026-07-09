@@ -80,7 +80,7 @@ theorem typing_unique {Γ : Ctx} {e : Expr} {t₁ t₂ : Ty}
     (h₁ : HasType Γ e t₁) (h₂ : HasType Γ e t₂) : t₁ = t₂ := by
   unfold HasType at h₁ h₂
   rw [h₁] at h₂
-  exact (Option.some.inj h₂).symm
+  exact Option.some.inj h₂
 
 /--
 **T1 (typing-decidability leg).** Whether a term is well-typed in a context is
@@ -89,10 +89,10 @@ decidable — the static analysis always terminates with a definite answer
 -/
 instance typing_decidable (Γ : Ctx) (e : Expr) :
     Decidable (∃ t : Ty, HasType Γ e t) := by
-  unfold HasType
-  match h : infer Γ e with
-  | none   => exact isFalse (fun ⟨_, ht⟩ => by rw [h] at ht; exact Option.noConfusion ht)
-  | some t => exact isTrue ⟨t, h⟩
+  simp only [HasType]
+  cases infer Γ e with
+  | none   => exact isFalse (by rintro ⟨t, ht⟩; simp at ht)
+  | some t => exact isTrue ⟨t, rfl⟩
 
 end Algebra
 end Governance

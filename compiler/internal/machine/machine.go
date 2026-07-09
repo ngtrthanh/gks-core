@@ -71,7 +71,7 @@ type Verdict struct {
 	Run           string
 	Subject       kernel.UUID
 	TText, TFact  time.Time
-	Result        string // compliant | violated | conditional | inapplicable
+	Result        string // compliant | violated | conditional | inapplicable | defeated
 	ConditionalOn *string
 }
 
@@ -367,12 +367,15 @@ func (e *Engine) exercise(view *View, ev *Event, env evaluator.Environment,
 
 // evaluate maps the final configuration to one verdict.
 //
-// AGENT-0-DECISION-3 (provisional resolver-state mapping, per handoff §6.3):
-// the resolver vocabulary is π₃-internal. IN_FORCE → compliant path;
-// DEFEATED → guard-suppressed, the machine stays as it is and the verdict is
-// 'inapplicable'; INACTIVE → 'inapplicable'. A norm no guard activates is
-// in force by default (norms apply unless guarded); INACTIVE downgrades it
-// only when an activating guard exists and did not fire.
+// Resolver-state → verdict mapping (Agent-0 Ruling 3, Option B):
+// IN_FORCE → compliant/violated (per execution); DEFEATED → 'defeated' (a
+// first-class, auditable verdict: the norm became applicable but a
+// higher-priority guard/resolver law suppressed it — neither satisfied nor
+// violated); INACTIVE → 'inapplicable' (the norm never entered force because
+// applicability conditions were absent). A norm no guard activates is in force
+// by default (norms apply unless guarded); INACTIVE downgrades it only when an
+// activating guard exists and did not fire. DEFEATED and INAPPLICABLE are kept
+// distinct to preserve provenance (they differ in causal history).
 func (e *Engine) evaluate(id string, norm kernel.NRMPayload, m *machineHandle,
 	view *View, env evaluator.Environment,
 	transition func(*machineHandle, State, *kernel.UUID, *kernel.UUID, *string, time.Time) error,
@@ -439,8 +442,9 @@ func (e *Engine) evaluate(id string, norm kernel.NRMPayload, m *machineHandle,
 
 	switch {
 	case resolution.Verdict == "DEFEATED":
-		// AGENT-0-DECISION-3: guard-suppressed; machine state untouched.
-		v.Result = "inapplicable"
+		// Agent-0 Ruling 3: guard-suppressed → first-class 'defeated' verdict,
+		// distinct from 'inapplicable'; the machine state is untouched.
+		v.Result = "defeated"
 
 	case !inForce:
 		v.Result = "inapplicable"
@@ -452,8 +456,9 @@ func (e *Engine) evaluate(id string, norm kernel.NRMPayload, m *machineHandle,
 				return v, err
 			}
 		}
-		// S-Violate applies to positive obligations only. AGENT-0-DECISION-2:
-		// no further branching on the O|P|F trichotomy.
+		// S-Violate applies to obligations only (Agent-0 Ruling 2: NRM is
+		// obligation-only; Force is deprecated, retained for legacy reads —
+		// the Force=="O" guard is the legacy realization of "is an obligation").
 		if norm.Force == "O" && norm.Sign == "+" && !env.Predicates["performed:"+norm.Act] {
 			if err := transition(m, Violated, nil, nil, nil, e.TFact); err != nil {
 				return v, err

@@ -29,10 +29,12 @@ const (
 	REF Constructor = "REF" // typed cross-corpus designation
 	VAL Constructor = "VAL" // governed quantitative binding
 	// NOTE: TIX is intentionally absent. Bitemporality is realized columnar
-	// (t_text/t_fact, Invariant I6), not as an instantiable constructor (G6).
+	// (t_text/t_fact, Invariant I6) as the index τ(x), not as an instantiable
+	// constructor — ratified by Agent-0 Ruling 1 (six-constructor basis).
 )
 
-// Valid reports whether c is one of the seven closed constructors.
+// Valid reports whether c is one of the six closed constructors (Agent-0
+// Ruling 1: TIX is a temporal index, not a constructor).
 func (c Constructor) Valid() bool {
 	switch c {
 	case NRM, CLS, PWR, GRD, REF, VAL:
@@ -356,8 +358,13 @@ type NRMPayload struct {
 	Bearer       string `json:"bearer"`
 	Counterparty string `json:"counterparty"`
 	Act          string `json:"act"`
-	Sign         string `json:"sign"`  // "+" | "-"
-	Force        string `json:"force"` // "O" | "P" | "F"
+	Sign         string `json:"sign"` // "+" | "-"
+	// Force is DEPRECATED (Agent-0 Ruling 2, Option B): the constitutional kernel
+	// recognizes only OBLIGATION norms — permission is the absence of an NRM and
+	// prohibition is modeled by GRD. The field is retained solely so legacy stored
+	// values ("O"|"P"|"F") remain readable; future ingesters shall emit obligation
+	// NRMs only, and executable semantics act on obligations alone.
+	Force string `json:"force"`
 	// Target is the object of the act (e.g. "output:c2"); optional.
 	Target string `json:"target,omitempty"`
 	// Qualifier is an open-texture constraint on the act (e.g. Boundary "OT-1"
@@ -418,12 +425,6 @@ type REFPayload struct {
 	Source    string `json:"source"`
 	TargetIRI string `json:"target_iri"`
 	Mode      string `json:"mode"` // cite | amend | derogate | define
-}
-
-// TIXPayload — an explicit bitemporal coordinate carried in a payload.
-type TIXPayload struct {
-	TText TSTZRange `json:"t_text"`
-	TFact TSTZRange `json:"t_fact"`
 }
 
 // Compile-time interface assertions.

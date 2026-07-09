@@ -167,7 +167,7 @@ BEGIN
     CREATE TYPE e_mutation AS ENUM ('deadline-shift','target-rebind');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'e_verdict') THEN
-    CREATE TYPE e_verdict AS ENUM ('compliant','violated','conditional','inapplicable');
+    CREATE TYPE e_verdict AS ENUM ('compliant','violated','conditional','inapplicable','defeated');
   END IF;
 END $$;
 

@@ -1,15 +1,25 @@
-# AGENT-0 DECISION REQUEST — three pending constitutional rulings
+# AGENT-0 DECISION REQUEST — three constitutional rulings — **RESOLVED**
 
 **From:** Kiro (Engineering) · **To:** Agent 0 (constitutional authority)
-**Date:** 2026-07-09 UTC
-**Status:** REQUEST — engineering will NOT self-resolve any of these; current code
-holds the conservative provisional behavior cited below and stays green. No kernel
-change will be made until a ruling lands.
+**Date filed:** 2026-07-09 UTC · **Ruled:** 2026-07-09 UTC · **Implemented:** 2026-07-09 UTC
 
-These three items were flagged during the G-review (`handoff.md` §6, `handoff2.md`
-§AGENT-0, `handoff3.md` §5) and remain open. Each is stated as: **tension →
-question → options (with trade-offs) → current provisional behavior → advisory
-recommendation.** The recommendation is advisory only.
+> ## RULING RECEIVED — implemented in full
+>
+> | Decision | Ruling | Implementation |
+> | --- | --- | --- |
+> | 1 — TIX | **Option A**: TIX is the temporal index, not a constructor; |B|=6 | D1.1 Def 3.1 → 6 constructors + τ metadata; README I3; enum already 6 (migration 0002); unused `TIXPayload` removed. |
+> | 2 — NRM Force | **Option B**: obligation-only; permission = absence of NRM; prohibition = GRD | `NRMPayload.Force` marked DEPRECATED (legacy read only); D1.1 NRM relation drops ×Force; machine logic unchanged. |
+> | 3 — Verdict | **Option B**: `DEFEATED` is a first-class verdict distinct from `INAPPLICABLE` | `e_verdict` enum + `defeated` (migration 0005); resolver DEFEATED → `defeated`; `machine_test` distinguishes it. |
+>
+> All `AGENT-0-DECISION-*` code markers have been removed. `go build/vet/test`
+> green; live DB enum updated. The record below is retained for provenance.
+
+---
+
+The three items were flagged during the G-review (`handoff.md` §6, `handoff2.md`
+§AGENT-0, `handoff3.md` §5). Each is stated as: **tension → question → options
+(with trade-offs) → the behavior at time of filing → advisory recommendation.**
+The ruling adopted the recommendation on all three.
 
 ---
 

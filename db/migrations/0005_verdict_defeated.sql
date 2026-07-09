@@ -1,0 +1,11 @@
+-- Migration 0005 — Agent-0 Ruling 3: DEFEATED first-class verdict
+-- ---------------------------------------------------------------------------
+-- Adds 'defeated' to the e_verdict enum: a norm that became applicable but was
+-- suppressed by a higher-priority guard / resolver law — neither satisfied nor
+-- violated, and constitutionally DISTINCT from 'inapplicable' (which means the
+-- norm never entered force). Distinguishing them preserves provenance
+-- (auditability), per the ruling.
+--
+-- Apply as the schema owner. `ALTER TYPE ... ADD VALUE` must not run inside a
+-- transaction block on older PostgreSQL; run this statement standalone.
+ALTER TYPE e_verdict ADD VALUE IF NOT EXISTS 'defeated';

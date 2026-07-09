@@ -129,16 +129,16 @@ func TestRun1Compliant(t *testing.T) {
 }
 
 // Run 1, scenario B: a prior sale within P2Y — g2 (priority 200) defeats n1.
-// AGENT-0-DECISION-3: DEFEATED is guard-suppression -> verdict inapplicable,
-// machine state untouched.
+// Agent-0 Ruling 3: DEFEATED is a first-class verdict distinct from
+// inapplicable; the defeat must not advance the machine.
 func TestRun1AntiStackingDefeats(t *testing.T) {
 	s := newFake()
 	res, err := engine(s).Replay(run1View(), []Event{saleEvent(true)})
 	if err != nil {
 		t.Fatalf("replay: %v", err)
 	}
-	if res.Verdicts[0].Result != "inapplicable" {
-		t.Fatalf("want inapplicable (defeated), got %s", res.Verdicts[0].Result)
+	if res.Verdicts[0].Result != "defeated" {
+		t.Fatalf("want defeated (guard-suppressed), got %s", res.Verdicts[0].Result)
 	}
 	if s.machines[tN1] != Proposed {
 		t.Fatalf("defeat must not advance the machine, got %s", s.machines[tN1])

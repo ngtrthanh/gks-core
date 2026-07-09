@@ -93,10 +93,12 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
    already clause-atomic (segmentation ×1.00, 0 multi-modal); two fresh
    classifiers agree at κ=0.8380 (> the 0.7877 stored baseline), so the residual
    gap is *semantic cue modelling*, not structural splitting.
-5. **Pending Agent-0 decisions** — now documented as a formal decision request in
-   `AGENT-0-DECISIONS.md` (TIX-enum vs. columnar; NRM Force O|P|F trichotomy;
-   resolver→verdict mapping), each with options + advisory recommendation. Not
-   self-resolved; provisional behavior holds until Agent 0 rules.
+5. **Agent-0 decisions — RULED & implemented** (2026-07-09, `AGENT-0-DECISIONS.md`):
+   TIX ratified as the temporal index, not a constructor (|B|=6, Option A); NRM
+   `Force` deprecated → obligation-only (Option B); `DEFEATED` added as a
+   first-class verdict distinct from `INAPPLICABLE` (Option B, migration 0005).
+   All `AGENT-0-DECISION-*` markers removed; spec (D1.1/D1.2), README, and tests
+   reconciled; build/tests green.
 
 ## 6. Recommended next steps (priority order)
 
@@ -113,5 +115,6 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 4. **Continuous ingestion** — multi-domain Registry Law now **tested**
    (`TestRegistryLawBoundedBasisAcrossDomains`, 4 real domains, basis = B). Still
    open: *automated/continuous* ingestion (currently one-shot per corpus).
-5. Agent-0 decisions **filed** in `AGENT-0-DECISIONS.md`; awaiting a ruling —
-   engineering holds the provisional behavior until then.
+5. ~~Escalate the three Agent-0 decisions~~ — **RULED & implemented** 2026-07-09
+   (TIX index / obligation-only NRM / first-class `DEFEATED`); see
+   `AGENT-0-DECISIONS.md`.

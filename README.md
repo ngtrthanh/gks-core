@@ -28,7 +28,7 @@ implementation (see `handoff.md` for the open work queue).
 
 | Document | Subject | Key invariants |
 | --- | --- | --- |
-| `D1.1-Mathematical-Objects.md` | Sets, relations, tuple definitions of the 7 constructors | I2, I6 |
+| `D1.1-Mathematical-Objects.md` | Sets, relations, tuple definitions of the 6 constructors | I2, I6 |
 | `D1.2-Type-System.md` | Base sorts, roles, typing judgments $\Gamma \vdash e : \tau$ | I3 |
 | `D1.3-Grammar.md` | EBNF for the semantic algebra $T$; sub-Turing constraints | I1, I7 |
 | `D1.4-Operational-Semantics.md` | Big-/small-step rules for layer $\hat{E}$ | I2, I8 |
@@ -36,7 +36,7 @@ implementation (see `handoff.md` for the open work queue).
 
 ## Foundational Commitments
 
-- **Kernel closure (I3).** The basis $B = \{\text{NRM}, \text{CLS}, \text{PWR}, \text{GRD}, \text{REF}, \text{VAL}, \text{TIX}\}$ and the language $T$ are closed. No eighth constructor. (In the store, TIX is realized *columnar* as the bitemporal coordinates `t_text`/`t_fact`, not as an instantiable row constructor — pending Agent 0 decision #1.)
+- **Kernel closure (I3).** The basis $B = \{\text{NRM}, \text{CLS}, \text{PWR}, \text{GRD}, \text{REF}, \text{VAL}\}$ and the language $T$ are closed. No seventh constructor. TIX is **not** a constructor but the bitemporal index $\tau(x)$ every instance carries, realized *columnar* as `t_text`/`t_fact` (Agent-0 Ruling 1).
 - **Read-only algebra (I1).** $T$ has empty write-effect by construction; the evaluator receives no DB handle and takes `Now` as a parameter.
 - **Single writer (I2).** Only $\hat{E}$ extends $\hat{K}$, append-only — enforced by trigger and RBAC in `db/schema.sql`.
 - **Determinism (I8).** Evaluation and export are pure in ⟨DB snapshot, eval coordinates⟩: guard ties break on guard ID, exports α-rename UUIDs to content-ordered ids.

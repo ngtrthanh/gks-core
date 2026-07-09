@@ -2,6 +2,29 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — Agent-0 constitutional rulings implemented
+
+Three pending constitutional decisions (see `AGENT-0-DECISIONS.md`) were ruled by
+Agent-0 and implemented in full; all `AGENT-0-DECISION-*` markers removed.
+
+- **Ruling 1 — TIX (Option A).** TIX is the bitemporal **index** carried by every
+  instance, *not* a constructor; the basis is the six governance constructors
+  `{NRM,CLS,PWR,GRD,REF,VAL}`. D1.1 Def 3.1 → 6 (+ τ metadata clarification);
+  D1.2 `WF-TIX` reframed as the index-metadata judgment `WF-τ`; README I3 + spec
+  index → 6; unused `TIXPayload` removed. No DB change (migration 0002 already
+  six-valued).
+- **Ruling 2 — NRM Force (Option B).** The kernel recognizes only *obligations*;
+  permission = absence of NRM, prohibition = GRD. `NRMPayload.Force` marked
+  **deprecated** (legacy read only); D1.1 NRM relation drops the `×Force`
+  component; D1.2 drops the Force operand from `WF-NRM` and deprecates the
+  `Force` sort; Axiom 1.2 annotated. Machine transition logic unchanged.
+- **Ruling 3 — Verdict (Option B).** `DEFEATED` is now a **first-class verdict**,
+  distinct from `INAPPLICABLE` (preserving provenance). `e_verdict` enum gains
+  `defeated` (migration `0005_verdict_defeated.sql` + `schema.sql`, applied to the
+  live DB); the resolver's `DEFEATED` state maps to the `defeated` verdict (was
+  `inapplicable`); `machine_test` distinguishes the two.
+- `go build/vet/test ./...` green; `make spec` OK.
+
 ## 2026-07-09 — Lean proofs compile in CI; T8 (I7) discharged (Phase 2 tractable set)
 
 - **Milestone: the Lean mechanization is machine-verified.** New

@@ -31,7 +31,7 @@ port 5435); `make validate` PASS; `cmd/interop`, `cmd/falsify` run.
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
 | **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. |
 | **8.3 Formal Mechanization** | 🟡 **Partial** | I1/I8/I2 proofs written (Lean, mathlib-free); **compilation pending** a Lean toolchain in CI. I5, I7 not mechanized. |
-| **8.4 Continuous Ingestion** | 🟡 **Partial** | One unsupervised corpus (VN Labour Code) ingested; Registry Law held (basis stayed at 6, Θ(1)). **Gap:** not continuous, not multi-domain; docx extraction is shallow (~29% yield, single-cue). |
+| **8.4 Continuous Ingestion** | 🟡 **Partial** | One unsupervised corpus (VN Labour Code) ingested; Registry Law held (basis stayed at 6, Θ(1)). **Track D finding (2026-07-09):** the corpus is already *clause-atomic* — `ingest_docx` extracts one instance per khoản/điểm, so structural segmentation recovers 0 further units and 0 stored unit is multi-modal (`cmd/trackd`). **Gap:** not continuous, not multi-domain; remaining classifier disagreement is semantic (cue modelling), not structural. |
 
 ---
 
@@ -83,8 +83,10 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
    operational content is now mechanically verified over the store (acyclic REF
    graph + store-wide sub-Turing screen, 2026-07-09). Formal discharge still needs
    the (blocked) Lean toolchain.
-4. **Extraction depth (Track D).** κ baseline is 0.7877; clause-level splitting +
-   multi-modality is the lever to raise it.
+4. **Extraction depth (Track D) — resolved.** `cmd/trackd` showed the corpus is
+   already clause-atomic (segmentation ×1.00, 0 multi-modal); two fresh
+   classifiers agree at κ=0.8380 (> the 0.7877 stored baseline), so the residual
+   gap is *semantic cue modelling*, not structural splitting.
 5. **Pending Agent-0 decisions** (unchanged): TIX-enum drop vs. handoff §6;
    NRM Force O|P|F trichotomy; resolver→verdict mapping.
 
@@ -95,7 +97,9 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 2. ~~Add the **I5 erasure test**~~ — **DONE** 2026-07-09
    (`TestI5PresentationErasure{Pure,Corpus}`); the invariant scorecard now has
    no untested invariant.
-3. **Track D** extraction depth against the 0.7877 κ baseline.
+3. ~~**Track D** extraction depth~~ — **DONE** 2026-07-09 (`cmd/trackd`): corpus
+   already clause-atomic; lever redirected to cue modelling. See
+   `validation/trackd/REPORT.md`.
 4. Broaden **continuous ingestion** to a second domain to genuinely exercise the
    Registry Law.
 5. Escalate the three Agent-0 decisions for a ruling.

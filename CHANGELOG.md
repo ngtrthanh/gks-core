@@ -2,6 +2,23 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — Track D: clause-level extraction-depth study
+
+- **Milestone (`cmd/trackd`, `validation/trackd/REPORT.md`).** Reads stored docx
+  source text only (no re-ingestion), segments each unit into khoản/điểm clauses,
+  and runs two independent classifiers at paragraph vs clause granularity.
+  - **Finding 1:** the corpus is already *clause-atomic* — every stored unit begins
+    with its own khoản/điểm marker, so segmentation recovers **0** further units
+    (×1.00) and **0** unit is multi-modal. Extraction depth is already maximal.
+  - **Finding 2:** two fresh independent classifiers agree at **κ=0.8380** on the
+    same units — above the Track B stored-vs-independent baseline (0.7877). The
+    Track B gap traced largely to the older ingester rules frozen in the store,
+    not to genuine textual ambiguity.
+  - **Finding 3:** the improvement lever is *semantic cue modelling*, not finer
+    segmentation.
+- `PROGRESS.md` updated (8.4 Continuous Ingestion; risks/next-steps). `go build/
+  vet/test ./...` green.
+
 ## 2026-07-09 — I7 operationally verified + store-wide falsification-clean
 
 - **Milestone: the whole live store is proven inside the frozen kernel, and I7's

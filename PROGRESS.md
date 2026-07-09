@@ -41,17 +41,18 @@ port 5435); `make validate` PASS; `cmd/interop`, `cmd/falsify` run.
 | --- | --- | --- | --- |
 | I1 | Read-only algebra | `Environment` copy-on-bind; no DB handle in `Eval`; Lean T2 | 🟢 by construction (proof uncompiled) |
 | I2 | Single writer / append-only | DB trigger + RBAC (`e_writer`); invariant tests reject UPDATE/DELETE; Lean T6 | 🟢 enforced + tested |
-| I3 | Kernel closure | 6-constructor enum; `FALSIFICATION-CANDIDATE` screen halts extensions | 🟢 held (Track C) |
+| I3 | Kernel closure | 6-constructor enum; `FALSIFICATION-CANDIDATE` screen halts extensions; whole store screened clean (410 rows) | 🟢 held (Track C + store-wide) |
 | I4 | Registry inertness | pure rename-stability test (`internal/registry`) | 🟢 tested (Go); Lean T4 open |
 | I5 | Presentation erasure | verdict identifier = `CanonicalHash(ast)` only; erasure + adversarial-mutation test over 392 stored instances | 🟢 **tested** |
 | I6 | Bitemporal totality | `tix_explicit_lower` CHECK; verdicts carry coordinates; temporal-read CLI | 🟢 enforced |
-| I7 | Stratified reflection | Lean T8 stated | 🟡 `sorry` (unproven) |
+| I7 | Stratified reflection | Lean T8 `sorry`; **operationally verified** — REF reflection graph acyclic + store-wide sub-Turing screen (410 instances) | 🟡 proof pending, empirically held |
 | I8 | Pass determinism | byte-stable CNF; resolver tie-break; no float64; Lean T3 | 🟢 held + proof (uncompiled) |
 | I9 | Source anchoring | UNIQUE(source_map.instance_pk) + totality (410/410 mapped, 0 unmapped) + tests | 🟢 enforced + tested |
 
-**Weakest links:** I7 (unproven), and the *compilation* of the I1/I2/I8 proofs.
-(I5 was closed 2026-07-09 with `TestI5PresentationErasure{Pure,Corpus}` — erasure
-+ adversarial mutation of the presentation envelope over all 392 stored instances.)
+**Weakest links:** the *compilation* of the I1/I2/I8 Lean proofs, and the Lean
+T8 (I7) `sorry` — though I7's operational content (acyclic reflection graph +
+store-wide sub-Turing screen over 410 instances) is now mechanically verified.
+(I5 was closed 2026-07-09 with `TestI5PresentationErasure{Pure,Corpus}`.)
 
 ---
 
@@ -78,8 +79,10 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
    review-ready but unproven-in-CI. → run in an env with GitHub-asset access.
 2. **No truly independent second compiler.** The κ number is real but
    intra-team. A genuine Phase-1 claim needs a separate implementation.
-3. **I7 unproven.** T8 (well-foundedness) is `sorry`; the one remaining invariant
-   weaker than the rest. (I5 closed 2026-07-09.)
+3. **I7 Lean proof pending.** T8 (well-foundedness) is still `sorry` in Lean; its
+   operational content is now mechanically verified over the store (acyclic REF
+   graph + store-wide sub-Turing screen, 2026-07-09). Formal discharge still needs
+   the (blocked) Lean toolchain.
 4. **Extraction depth (Track D).** κ baseline is 0.7877; clause-level splitting +
    multi-modality is the lever to raise it.
 5. **Pending Agent-0 decisions** (unchanged): TIX-enum drop vs. handoff §6;

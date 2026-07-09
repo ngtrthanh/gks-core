@@ -2,6 +2,22 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — I7 operationally verified + store-wide falsification-clean
+
+- **Milestone: the whole live store is proven inside the frozen kernel, and I7's
+  operational content is mechanically checked** (Lean T8 is still `sorry`, but its
+  concrete meaning is now tested). New `internal/invariants/i7_wellfounded_test.go`:
+  - `TestI7ReflectionWellFounded` — the stored REF reflection graph is **acyclic**
+    (no instance transitively references itself; 3 edges, 0 cyclic nodes), so the
+    reflection strata are well-founded (I7 / D1.5 T8).
+  - `TestStoreWideFalsificationClean` — replays the falsification screen (the gate
+    `cmd/falsify` applies to candidates) over **all 410 stored instances**: every
+    constructor is in the closed basis B (I3) and every T AST (392) is within the
+    sub-Turing algebra T (I1/I7). Zero FALSIFICATION-CANDIDATEs.
+- `PROGRESS.md`: I7 🟡→"proof pending, empirically held"; I3 evidence extended to
+  the store-wide screen.
+- `go build/vet/test ./...` green.
+
 ## 2026-07-09 — I5 presentation erasure now mechanically tested
 
 - **Milestone: the invariant scorecard has no untested invariant.** New

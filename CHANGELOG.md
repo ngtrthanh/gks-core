@@ -2,6 +2,22 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — Milestone loop complete; sole remaining gate = Lean toolchain
+
+- **Verifiable-here roadmap set is exhausted.** Every invariant I1–I9 now has a
+  passing test or a written proof; Tracks A–D, the store-wide screen, the
+  multi-domain Registry Law, I5-erasure and I7-well-foundedness all land and the
+  full suite is green (`go build/vet/test ./...`, 9-test invariant suite PASS).
+- **Governance:** `AGENT-0-DECISIONS.md` files the three open constitutional
+  rulings (TIX enum/G6, NRM Force O|P|F/G5, resolver→verdict/G3) as a formal
+  request — options + advisory recommendations, not self-resolved.
+- **Doc hygiene:** PROGRESS 8.3 now distinguishes Go-*tested* invariants (I5/I7)
+  from Lean-*proved* ones.
+- **Sole remaining engineering gate:** the Lean toolchain is unreachable in this
+  environment (elan DNS + GitHub release assets), blocking CI-compilation of the
+  I1/I2/I8 proofs and discharge of T8 (I7). Unblocks in any GitHub-asset-reachable
+  CI. Nothing else verifiable here remains open.
+
 ## 2026-07-09 — Registry Law verified across heterogeneous domains
 
 - **Milestone (`internal/invariants/registry_law_test.go`).**

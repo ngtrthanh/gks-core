@@ -4,12 +4,17 @@
 **Baselines:** `spec/D0v5.md` (D0 v1.1, FROZEN), `spec/D1.1–D1.5`,
 `handoff.md`/`handoff2.md`/`handoff3.md`, `CHANGELOG.md`.
 **Verification basis:** `go build/vet/test ./...` green; live dev DB (Postgres 18,
-port 5435); `make validate` PASS; `cmd/interop`, `cmd/falsify` run.
+port 5435); `make validate` PASS; `cmd/interop`, `cmd/falsify`, `cmd/trackd` run;
+invariant suite incl. I5-erasure, I7-well-foundedness, store-wide screen, and the
+multi-domain Registry Law all pass.
 
-> One-line status: **Phase 3 (industrial compiler) is substantially built and
-> conformance-hardened; Phases 1–2 (validation + mechanization) are partially
-> met and are now the frontier.** No falsification criterion has triggered; the
-> kernel remains provisionally intact but NOT yet confirmed.
+> One-line status: **Phase 3 (industrial compiler) is built and conformance-
+> hardened; every invariant I1–I9 now has a passing test or a written proof.**
+> The kernel remains provisionally intact (no falsification triggered) but NOT
+> yet *confirmed*. **The sole remaining engineering gate is the Lean toolchain**
+> (unreachable here: elan DNS + GitHub release assets), which blocks CI-compiling
+> the I1/I2/I8 proofs and discharging T8 (I7). Everything else verifiable in this
+> environment is done.
 
 ---
 

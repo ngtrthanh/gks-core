@@ -1,6 +1,6 @@
 # PROGRESS REPORT — gks-core vs. the D0 Maturity Roadmap
 
-**Date:** 2026-07-09 UTC (current through tag `v0.8.0`) · **Author:** Kiro (Engineering)
+**Date:** 2026-07-09 UTC (current through tag `v0.9.0`) · **Author:** Kiro (Engineering)
 **Baselines:** `spec/D0v5.md` (D0 v1.1, FROZEN), `spec/D1.1–D1.5`,
 `handoff.md`/`handoff2.md`/`handoff3.md`, `CHANGELOG.md`.
 **Verification basis:** `go build/vet/test ./...` green; live dev DB (Postgres 18,
@@ -24,7 +24,7 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 | --- | --- | --- | --- |
 | **0 — Kernel Discovery** | Establish ⟨B, T⟩ and the constitution | ✅ **Complete** | D0 v1.1 frozen; `spec/D1.1–D1.5`. |
 | **1 — Kernel Validation** | Empirical stress-testing; independent multi-compiler verification | 🟡 **Partial** | Two benchmarks (§121, ISO 8.7) + KPI + a 400+-instance labour corpus across **4 domains**; real inter-compiler κ=0.7877 (`cmd/interop`) and a fresh-vs-fresh κ=0.8380 (`cmd/trackd`); falsification campaign (`cmd/falsify`) + whole-store screen clean (410 rows); Registry Law Θ(1) verified across domains. **Gap:** no *organizationally independent* second compiler; single implementation. |
-| **2 — Mechanized Semantics** | Machine-checked invariant proofs | 🟢 **Tractable set done** | T1 (decidability+termination), T2 (I1), T3 (I8), T6 (I2), T8 (I7) proved mathlib-free and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`); plus D1.2 uniqueness-of-sorts. **Remaining (research-grade):** C1 (minimality); T4/T5/T7 (have Go tests, Lean-mechanizable later); full T1 over the `Count`/`Window` productions. |
+| **2 — Mechanized Semantics** | Machine-checked invariant proofs | 🟢 **All theorem obligations done** | **T1–T8 all proved** mathlib-free and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`), plus the D1.2 uniqueness-of-sorts metatheorem. **Remaining:** C1 (minimality) — the sole open conjecture; and extending T1/T4/T5 over the `Count`/`Window` productions. |
 | **3 — Industrial Compiler** | Production-scale passes enforcing invariants by construction | 🟢 **Substantial** | Go + PostgreSQL: bitemporal K̂ store, pure Ŝ evaluator + defeasible resolver, persisted Ê (replay → verdicts), CNF export + Ed25519 seal, temporal-read CLI, registry snapshots, exact-rational VAL. WP-1…WP-8 landed. **Gap:** Track D showed extraction is already clause-atomic; remaining gaps are *scale* beyond the dev corpus and *automated/continuous* ingestion. |
 
 ---
@@ -35,7 +35,7 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 | --- | --- | --- |
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
 | **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. **Track D datapoint:** two *fresh* independent classifiers agree at κ=0.8380 (`cmd/trackd`), isolating the Track B gap to the older stored assignments rather than textual ambiguity. |
-| **8.3 Formal Mechanization** | 🟢 **Met (tractable set)** | T1 (decidability+termination), T2 (I1), T3 (I8), T6 (I2), T8 (I7) + D1.2 uniqueness-of-sorts are mathlib-free Lean proofs that **compile in CI** (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`). I5 and additional I7 content are also **Go-tested** over the store. Open: C1 (minimality); T4/T5/T7 mechanizable later. |
+| **8.3 Formal Mechanization** | 🟢 **Met** | **T1–T8** (all eight theorem obligations) + the D1.2 uniqueness-of-sorts metatheorem are mathlib-free Lean proofs that **compile in CI** (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`). Every invariant with a Go test now also has a machine-checked proof. Open: **C1** (minimality) only. |
 | **8.4 Continuous Ingestion** | 🟢 **Substantial** | Store spans **4 real normative domains**; `TestRegistryLawBoundedBasisAcrossDomains` proves basis = B (Θ(1)) across all. **Continuous control plane** (`cmd/ingest_run` + `ingestion_run` ledger, migration 0006): manifest-driven, **digest-idempotent**, ledgered — a re-run over an unchanged corpus is a safe no-op (UP-TO-DATE→skip; verified 0-delta with Registry Law HELD). Idempotency is enforced in the control plane because `kernel_instance`'s EXCLUDE constraint rejects overlapping re-inserts. **Track D:** corpus already clause-atomic. **Gap:** scheduling is external (cron/CI); one unsupervised corpus so far. |
 
 ---
@@ -47,18 +47,17 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 | I1 | Read-only algebra | `Environment` copy-on-bind; no DB handle in `Eval`; Lean T2 (CI-compiled) | 🟢 by construction + proof CI-compiled |
 | I2 | Single writer / append-only | DB trigger + RBAC (`e_writer`); invariant tests reject UPDATE/DELETE; Lean T6 (CI-compiled) | 🟢 enforced + tested + proved |
 | I3 | Kernel closure | 6-constructor enum; `FALSIFICATION-CANDIDATE` screen halts extensions; whole store screened clean (410 rows) | 🟢 held (Track C + store-wide) |
-| I4 | Registry inertness | pure rename-stability test (`internal/registry`) | 🟢 tested (Go); Lean T4 open |
-| I5 | Presentation erasure | verdict identifier = `CanonicalHash(ast)` only; erasure + adversarial-mutation test over 392 stored instances | 🟢 **tested** |
-| I6 | Bitemporal totality | `tix_explicit_lower` CHECK; verdicts carry coordinates; temporal-read CLI | 🟢 enforced |
+| I4 | Registry inertness | pure rename-stability test (`internal/registry`) + Lean **T4** (`eval_rename_stable`, CI-compiled) | 🟢 tested + proved |
+| I5 | Presentation erasure | verdict identifier = `CanonicalHash(ast)` only; erasure + adversarial-mutation test over 392 stored instances; Lean **T5** (`verdict_erases_presentation`, CI-compiled) | 🟢 tested + proved |
+| I6 | Bitemporal totality | `tix_explicit_lower` CHECK; verdicts carry coordinates; temporal-read CLI; Lean **T7** (`tix_total_preserved`, CI-compiled) | 🟢 enforced + proved |
 | I7 | Stratified reflection | Lean T8 **proved** (`Nat.lt_wfRel.wf`, CI-compiled) + REF graph acyclic + store-wide sub-Turing screen (410) | 🟢 proved + tested |
 | I8 | Pass determinism | byte-stable CNF; resolver tie-break; no float64; Lean T3 (CI-compiled) | 🟢 held + proof CI-compiled |
 | I9 | Source anchoring | UNIQUE(source_map.instance_pk) + totality (410/410 mapped, 0 unmapped) + tests | 🟢 enforced + tested |
 
 **Weakest links — all closed at the invariant level.** Every invariant now has a
-passing test and/or a CI-compiled Lean proof (I5 closed 2026-07-09; T8/I7 proved
-2026-07-09 via `Nat.lt_wfRel.wf`). The remaining open items are the *research
-conjecture* C1 (minimality) — not an invariant gap (T1 was proved & CI-compiled
-2026-07-09).
+passing test AND a CI-compiled Lean proof: **T1–T8 are all discharged** (Lean
+4.31.0, zero `sorry`). The one remaining open item is the *research conjecture*
+C1 (minimality) — not an invariant gap.
 
 ---
 

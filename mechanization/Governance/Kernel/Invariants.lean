@@ -6,12 +6,16 @@ mathlib-free (they concern our own inductive model), so `lake build` needs only
 the Lean toolchain — no mathlib download.
 
 * **T6 / I2** — append-only monotonicity of K̂: PROVED (`append_only_monotone`).
+* **T7 / I6** — bitemporal totality: PROVED (`tix_total_preserved` — append-only
+  extension with a valid index preserves store-wide index totality).
 * **T8 / I7** — well-foundedness of the stratification order: PROVED
   (`strata_wellFounded`, via the Lean-core instance `Nat.lt_wfRel.wf`).
 
-`T1` (decidability of `T`) and `C1` (minimality of ⟨B, T⟩) are research-grade
-and are NOT stated as trivial placeholders here — they remain conjectures in
-`spec/D1.5` (C1 is targeted empirically by the falsification campaign, Track C).
+`T1` (decidability + termination) is PROVED in `Governance.Algebra.Typing`
+(`typing_decidable`) and `Semantics` (`eval_terminates`). `C1` (minimality of
+⟨B, T⟩) is research-grade and is NOT stated as a trivial placeholder — it remains
+a conjecture in `spec/D1.5` (targeted empirically by the falsification campaign,
+Track C).
 -/
 
 namespace Governance

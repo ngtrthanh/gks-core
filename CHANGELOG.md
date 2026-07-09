@@ -2,6 +2,25 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-10 — T4/T5/T7 mechanized: all eight obligations T1–T8 CI-compiled
+
+- **Milestone: every D1.5 theorem obligation (T1–T8) is now machine-checked.**
+  - `mechanization/Governance/Algebra/Stability.lean` (new):
+    - `eval_rename_stable` — **T4 / I4** registry rename-stability (induction on
+      `Expr`; token identities are inert under a left-invertible renaming);
+    - `verdict_erases_presentation` — **T5 / I5** presentation erasure (`rfl`; the
+      verdict is a function of the term alone).
+  - `mechanization/Governance/Kernel/Invariants.lean`: `tix_total_preserved` —
+    **T7 / I6** bitemporal totality (append-only extension with a valid index
+    preserves store-wide index totality).
+- **CI-verified:** GitHub Actions `lean.yml` green on Lean 4.31.0 (build + zero
+  `sorry`) — T4/T5/T7 compiled first try. Now CI-compiled: **T1, T2, T3, T4, T5,
+  T6, T7, T8** + D1.2 uniqueness-of-sorts. Every invariant with a Go test also has
+  a machine-checked proof.
+- `spec/D1.5` ledger T4/T5/T7 → **proved**; PROGRESS Phase 2 → 🟢 all theorem
+  obligations done, §8.3 🟢 Met, invariant scorecard I4/I5/I6 → tested+proved;
+  README updated. **Sole remaining D1.5 item: C1 (minimality) conjecture.**
+
 ## 2026-07-09 — T1 (decidability + termination) discharged in Lean (CI-compiled)
 
 - **Milestone: D1.5 §T1 proved for the mechanized `Expr` fragment.** New

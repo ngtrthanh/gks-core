@@ -43,5 +43,40 @@ termination checker); no mathlib required.
 theorem strata_wellFounded : WellFounded (fun a b : Nat => a < b) :=
   Nat.lt_wfRel.wf
 
+/-- A bitemporal index (D1.1 Def. 2.1): text- and fact-validity intervals, each
+    with an explicit lower bound (I6 `tix_explicit_lower`). Validity is
+    `lower ≤ upper` in both dimensions. -/
+structure TIX where
+  textLo : Nat
+  textHi : Nat
+  factLo : Nat
+  factHi : Nat
+
+/-- The index is valid when both intervals are non-empty. -/
+def TIX.valid (τ : TIX) : Prop := τ.textLo ≤ τ.textHi ∧ τ.factLo ≤ τ.factHi
+
+/-- K̂ as a log of indexed instances: each carries its bitemporal index τ. -/
+abbrev IndexedKB := List (Nat × TIX)
+
+/-- Totality (I6): every instance in K̂ carries a valid index. -/
+def allValid (k : IndexedKB) : Prop := ∀ p ∈ k, (Prod.snd p).valid
+
+/-- The single writer appends one instance together with its index. -/
+def extendI (k : IndexedKB) (i : Nat) (τ : TIX) : IndexedKB := k ++ [(i, τ)]
+
+/--
+**T7 — Bitemporal totality (Invariant I6).** Extending a totally-indexed K̂ with
+an instance whose index is valid preserves totality: every instance still carries
+a valid bitemporal index. Since Ê is the sole, append-only writer and always
+stamps a valid τ, the whole store stays total by induction over the run.
+-/
+theorem tix_total_preserved (k : IndexedKB) (i : Nat) (τ : TIX)
+    (hk : allValid k) (hτ : τ.valid) : allValid (extendI k i τ) := by
+  intro p hp
+  simp only [extendI, List.mem_append, List.mem_singleton] at hp
+  rcases hp with hin | heq
+  · exact hk p hin
+  · subst heq; exact hτ
+
 end Kernel
 end Governance

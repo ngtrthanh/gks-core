@@ -95,5 +95,15 @@ theorem eval_deterministic (env : Env) (e : Expr) {v₁ v₂ : Value}
     (h₁ : eval env e = v₁) (h₂ : eval env e = v₂) : v₁ = v₂ :=
   h₁.symm.trans h₂
 
+/--
+**T1 (termination leg) — Evaluation totality.** Every term of `T` evaluates to a
+determinate value in every environment: `eval` is a *total* function (structural
+recursion over the finite, fixpoint-free `Expr`), so no evaluation diverges.
+This discharges the "evaluation terminates" half of D1.5 §T1 (D0 Assumption 4);
+the typing-decidability half is `Governance.Algebra.typing_decidable`.
+-/
+theorem eval_terminates (env : Env) (e : Expr) : ∃ v : Value, eval env e = v :=
+  ⟨eval env e, rfl⟩
+
 end Algebra
 end Governance

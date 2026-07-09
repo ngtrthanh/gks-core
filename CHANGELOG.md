@@ -2,6 +2,21 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-10 — Agent-0 FINAL CONSTITUTIONAL VERDICT: Phase 1 accepted
+
+- **Phase 1 (Kernel Validation) is ACCEPTED.** Agent-0's final verdict closes the
+  *implementation* program: "The remaining work is no longer implementation work.
+  It is scientific confirmation." Recorded in `AGENT-0-DECISIONS.md`.
+- No code change — a status ruling. `PROGRESS.md` updated: Phase 1 → ✅ Accepted;
+  one-line status and §4 reframed — what remains (independent replication for
+  D0 §9.2 convergence, and the C1 minimality question) is **scientific
+  confirmation**, not engineering. The falsification campaign stands open; no
+  criterion has triggered.
+- Marks **v1.0.0**: the accepted reference realization of ⟨B, T⟩ — six
+  constructors, invariants I1–I9 (tested/CI-proved), all D1.5 obligations T1–T8
+  Lean-mechanized, Ê layer, CNF+seal, temporal reads, validation + continuous
+  ingestion.
+
 ## 2026-07-10 — T4/T5/T7 mechanized: all eight obligations T1–T8 CI-compiled
 
 - **Milestone: every D1.5 theorem obligation (T1–T8) is now machine-checked.**

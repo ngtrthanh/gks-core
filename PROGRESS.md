@@ -1,6 +1,6 @@
 # PROGRESS REPORT — gks-core vs. the D0 Maturity Roadmap
 
-**Date:** 2026-07-09 UTC (current through tag `v0.9.0`) · **Author:** Kiro (Engineering)
+**Date:** 2026-07-09 UTC (current through tag `v1.0.0`) · **Author:** Kiro (Engineering)
 **Baselines:** `spec/D0v5.md` (D0 v1.1, FROZEN), `spec/D1.1–D1.5`,
 `handoff.md`/`handoff2.md`/`handoff3.md`, `CHANGELOG.md`.
 **Verification basis:** `go build/vet/test ./...` green; live dev DB (Postgres 18,
@@ -9,12 +9,13 @@ invariant suite incl. I5-erasure, I7-well-foundedness, store-wide screen, and th
 multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 (`.github/workflows/lean.yml`, `lake build` on Lean 4.31.0, zero `sorry`).
 
-> One-line status: **Phase 3 (industrial compiler) built and conformance-hardened;
-> Phase 2's tractable proof set is now CI-compiled** — T2 (I1), T3 (I8), T6 (I2)
-> and T8 (I7) type-check in GitHub Actions (Lean 4.31.0, zero `sorry`). The kernel
-> remains provisionally intact (no falsification triggered) but NOT yet *confirmed*.
-> Remaining open items are research-grade, not engineering blockers: a genuinely
-> independent second compiler (Phase 1), and the C1 (minimality) conjecture.
+> One-line status: **Phase 1 (Kernel Validation) is ACCEPTED — Agent-0 final
+> constitutional verdict, 2026-07-10.** The *implementation* program is complete:
+> Phase 3 industrial compiler built and conformance-hardened; every invariant
+> I1–I9 tested and **T1–T8 CI-compiled** (Lean 4.31.0, zero `sorry`); Agent-0
+> rulings implemented. **The remaining work is no longer implementation — it is
+> scientific confirmation** (D0 §9.2): independent replication and the C1
+> (minimality) question. No falsification criterion has triggered.
 
 ---
 
@@ -23,7 +24,7 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 | Phase | Definition | Status | Evidence / gap |
 | --- | --- | --- | --- |
 | **0 — Kernel Discovery** | Establish ⟨B, T⟩ and the constitution | ✅ **Complete** | D0 v1.1 frozen; `spec/D1.1–D1.5`. |
-| **1 — Kernel Validation** | Empirical stress-testing; independent multi-compiler verification | 🟡 **Partial** | Two benchmarks (§121, ISO 8.7) + KPI + a 400+-instance labour corpus across **4 domains**; real inter-compiler κ=0.7877 (`cmd/interop`) and a fresh-vs-fresh κ=0.8380 (`cmd/trackd`); falsification campaign (`cmd/falsify`) + whole-store screen clean (410 rows); Registry Law Θ(1) verified across domains. **Gap:** no *organizationally independent* second compiler; single implementation. |
+| **1 — Kernel Validation** | Empirical stress-testing; independent multi-compiler verification | ✅ **Accepted** (Agent-0, 2026-07-10) | Two benchmarks (§121, ISO 8.7) + KPI + a 400+-instance labour corpus across **4 domains**; real inter-compiler κ=0.7877 (`cmd/interop`) and a fresh-vs-fresh κ=0.8380 (`cmd/trackd`); falsification campaign (`cmd/falsify`) + whole-store screen clean (410 rows); Registry Law Θ(1) verified across domains. Independent replication is reclassified as **scientific confirmation** (§9.2), not an implementation gap. |
 | **2 — Mechanized Semantics** | Machine-checked invariant proofs | 🟢 **All theorem obligations done** | **T1–T8 all proved** mathlib-free and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`), plus the D1.2 uniqueness-of-sorts metatheorem. **Remaining:** C1 (minimality) — the sole open conjecture; and extending T1/T4/T5 over the `Count`/`Window` productions. |
 | **3 — Industrial Compiler** | Production-scale passes enforcing invariants by construction | 🟢 **Substantial** | Go + PostgreSQL: bitemporal K̂ store, pure Ŝ evaluator + defeasible resolver, persisted Ê (replay → verdicts), CNF export + Ed25519 seal, temporal-read CLI, registry snapshots, exact-rational VAL. WP-1…WP-8 landed. **Gap:** Track D showed extraction is already clause-atomic; remaining gaps are *scale* beyond the dev corpus and *automated/continuous* ingestion. |
 
@@ -71,10 +72,12 @@ All ten falsification criteria remain **un-triggered**:
 - Registry Law held (Θ(1) basis) across **4 domains**, and the whole store
   (410 rows) screens falsification-clean.
 
-**Confirmation (D0 §9.2) is NOT yet earned:** it requires independent
-compilation convergence at the verdict stratum and evidence that no smaller
-spanning pair exists — neither is demonstrated (single implementation, and
-minimality C1 is an open conjecture). Status is correctly *provisional*.
+**Constitutional status (2026-07-10): Phase 1 ACCEPTED by Agent-0.** The
+implementation program is complete and accepted. What remains is **scientific
+confirmation** (D0 §9.2), *not* engineering: independent compilation convergence
+at the verdict stratum (a separate implementation), and the C1 minimality
+question. These are research obligations — pursued empirically, with the
+falsification campaign standing open — no longer coded deliverables.
 
 ---
 

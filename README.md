@@ -6,9 +6,12 @@ reference compiler, and (planned) validation harnesses for the kernel $\langle B
 frozen in D0 v1.1 (Constitutional Specification).
 
 Phase 0 (kernel discovery, narrative) is closed. Phase 1 restated every normative claim
-in D0 as an axiom, grammar, inference rule, or proof obligation (`spec/`). The tree is
-now in **Phase 3.5 — conformance hardening** of the working Go + PostgreSQL
-implementation (see `handoff.md` for the open work queue).
+in D0 as an axiom, grammar, inference rule, or proof obligation (`spec/`). As of
+**2026-07-10 the implementation program is constitutionally ACCEPTED** (Agent-0
+final verdict: *"Phase 1 is accepted; the remaining work is no longer
+implementation work — it is scientific confirmation"*). What remains is the
+**confirmation program** (D0 §9.2): independent replication and the C1 minimality
+question. See `AGENT-0-DECISIONS.md` and `PROGRESS.md`.
 
 ## Repository Layout
 

@@ -129,3 +129,33 @@ verdict-vocabulary change (constitutional).
   ruling lands.
 - On a ruling, implement it as a numbered migration + spec edit + tests, and
   remove the corresponding `AGENT-0-DECISION-*` marker.
+
+
+---
+
+## FINAL CONSTITUTIONAL VERDICT (Agent-0, 2026-07-10)
+
+> **Phase 1 is accepted.**
+>
+> **The remaining work is no longer implementation work. It is scientific
+> confirmation.**
+
+**Effect.** The implementation program (Phases 0–3 + the four-dimensional rigor
+build-out) is constitutionally **accepted**. `gks-core` stands as the accepted
+reference realization of the kernel ⟨B, T⟩: six constructors, nine invariants
+I1–I9 (each tested and/or CI-proved), all eight D1.5 theorem obligations T1–T8
+mechanized in Lean, the Ê execution layer, deterministic CNF + seal, temporal
+reads, registry snapshots, exact-rational VAL, the validation/interop/
+falsification harnesses, and the continuous-ingestion control plane.
+
+**What remains is science, not code.** Per D0 §9.2, *confirmation* is earned by
+- **independent compilation convergence** at the verdict stratum — a genuinely,
+  organizationally *separate* second implementation converging on the CNF/verdict
+  contract; and
+- resolution of the **C1 (minimality)** question — whether ⟨B, T⟩ is the smallest
+  spanning basis.
+
+These are empirical/research obligations. The falsification campaign (D0 §9.1)
+stands permanently open; no criterion has triggered. Engineering does not "close"
+confirmation by writing more code — it is earned by independent replication and
+scientific result. Kernel status remains *provisional-but-accepted* until then.

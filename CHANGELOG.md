@@ -2,6 +2,61 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-07 — Tracks A/B/C (post-handoff2; see handoff3.md)
+
+- **Track A — mechanized semantics (Phase 2).** Mathlib-free Lean proofs in
+  `mechanization/`: **T2** (I1 purity, `eval_is_pure := rfl`), **T3** (I8
+  determinism, `eval_deterministic`), **T6** (I2 append-only monotonicity,
+  `append_only_monotone`). **T8** (I7 well-foundedness) stated with `sorry`;
+  T1/C1 remain conjectures (not faked). `make verify` now runs `lake build`
+  where a Lean toolchain is present, else prints status. `spec/D1.5` ledger
+  updated. NOTE: proofs are **not yet compiled in CI** — the Lean toolchain
+  download is blocked in the current environment (elan host DNS fail, GitHub
+  release assets unreachable); they are review-/CI-ready.
+- **Track B — real inter-compiler agreement** (`cmd/interop`). An independent
+  second constructor classifier (different cue set/precedence) re-classifies the
+  live labour-code corpus; Fleiss' κ over **392** real loci = **0.7877**
+  (≥ 0.70, floor met), 59 disagreements. Report + both CNF exports under
+  `validation/interop/`. Caveat: one team maintains both classifiers → measures
+  rule-robustness, not organizational independence.
+- **Track C — falsification campaign** (`cmd/falsify`, `validation/falsification/`).
+  Screens a held-out/adversarial input set: 5 benign units admitted (5
+  constructors), 3 adversarial units (∀-unbounded, 8th constructor, fixpoint)
+  **halted** with FALSIFICATION-CANDIDATE. Registry Law (basis ≤ 6, Θ(1))
+  **HELD**; kernel not extended (I3).
+- Track D (clause-level / multi-modality docx extraction) is the next step,
+  now with a κ baseline (0.7877) to improve against.
+
+## 2026-07-06 — WP-4, WP-6, WP-8 (handoff2)
+
+- **WP-4 temporal read discipline (I6/G4).** New `internal/coord` parses
+  `--at-text`/`--at-fact` (RFC3339, default now); every reading command
+  (`verify_db`, `cnf_export`, `replay_d8`, `simulate_case`, `simulate_iso`)
+  threads the coordinates into `kernel_instance_at($1,$2)` / `Engine.TText/TFact`.
+  New `internal/refgraph.Impact` (recursive CTE over REF instances, temporally
+  filtered) and `cmd/impact <target_iri>`; `ingest_kpi` now seeds the REF edge
+  v4→P-11. DB-backed `refgraph` test proves the impacted set is
+  coordinate-sensitive.
+- **WP-6 registry snapshot + I4 (registry inertness).** `internal/registry`
+  (`Snapshot`/`SnapshotAt`, promoted from `ingest_kpi.loadRegistry`) loads the
+  versioned registry into exact Values; `Engine` gained a `Registry` field and
+  every evaluating command loads a snapshot at eval start. `RenameTokens`/
+  `RenameLookups` + a pure `TestI4RenameStability`: a bijective token rename
+  leaves the verdict suite identical.
+- **WP-8 validation harness (D0 §8.2).** `internal/validation`: Fleiss' κ over
+  per-locus constructor assignment (open-texture loci excluded), verdict
+  agreement over a shared suite, and the `FALSIFICATION-CANDIDATE` screen
+  (constructor ∉ B or operator ∉ T ⇒ halt, kernel untouched). `cmd/validate`
+  asserts the constitutional floors κ ≥ 0.70, VA ≥ 0.90; `make validate` runs
+  it (testdata: κ=0.8425, VA=0.9000, halt demonstrated).
+- **WP-8 corpus-derived coordinates (I8).** Ingesters no longer stamp
+  `time.Now()`: `ingest_benchmark` uses the §121 statutory epoch, `ingest_iso`
+  the ISO 9001:2015 date, `ingest_kpi` a declared policy epoch, and
+  `ingest_docx` parses the promulgated "có hiệu lực" effective date (fixed
+  fallback) — so CNF exports are reproducible across compilers.
+- **Makefile:** `make validate` wired; `impact` available. CNF export remains
+  byte-stable across runs on the same DB state (verified).
+
 ## 2026-07-06 — WP-7
 
 - **Exact-rational VAL** (no float64 in verdict paths, I8): the evaluator gains

@@ -17,9 +17,9 @@ implementation (see `handoff.md` for the open work queue).
 | `spec/` | Formal mathematical specifications (D1 series): objects, type system, grammar, operational semantics, proof obligations. | Draft, complete |
 | `db/` | PostgreSQL bitemporal K̂ store: baseline `schema.sql` + numbered migrations. | Working |
 | `compiler/` | Go reference implementation: kernel domain model, sub-Turing T evaluator, defeasible resolver, CNF export, ingest/simulate/verify commands. | Working |
-| `mechanization/` | Lean 4 / mathlib4 development for the D1.5 obligations. | Scaffold (compiles with `sorry`s; toolchain not wired into `make verify`) |
+| `mechanization/` | Lean 4 development (mathlib-free) for the D1.5 obligations. | T2/T3/T6 proved; T8 stated (`sorry`); `make verify` runs `lake build` where Lean is installed |
 | — | Ê execution layer: bitemporal event replay → persisted verdicts. | Working (`db/migrations/0004`, `compiler/internal/machine`, `cmd/replay_d8`) |
-| `validation/` | Reproducibility and inter-compiler agreement harnesses (Fleiss' $\kappa$, verdict agreement). | Not implemented |
+| `validation/` | Reproducibility and inter-compiler agreement harnesses (Fleiss' $\kappa$, verdict agreement). | Implemented (`make validate`) |
 | `deliver/`, `D8.md` | Benchmark fixture narratives (D8 Runs) with expected outcomes. | Reference |
 | `data/` | Source corpora for ingestion (e.g. Vietnamese consolidated statute .docx). | Reference |
 | `export/` | CNF dumps + Ed25519 seal material. **Gitignored — never committed.** | Generated |
@@ -58,12 +58,13 @@ Commands (all Go, stdlib + pgx; run with the `db` service up):
 | `cnf_export` | Deterministic α-renamed Canonical Normal Form dump (WP-5) |
 | `seal_export` / `verify_seal` | Detached Ed25519 signature over the CNF export |
 
-Known open gaps (tracked in `handoff.md`, in its severity order): temporal read
-discipline CLI flags (WP-4 partial — reads already go through `kernel_instance_at`),
-full registry-snapshot `Lookup` wiring + I4 rename-stability test (WP-6),
-validation harness (WP-8). Done: WP-1 (RBAC + append-only), WP-2 (`source_map`
-population, I9), WP-3 (Ê persistence), WP-5 (α-renamed CNF), WP-7 (exact-rational
-VAL — no float64 on the verdict path).
+All work packages in `handoff.md` / `handoff2.md` are now landed. Done: WP-1
+(RBAC + append-only), WP-2 (`source_map` population, I9), WP-3 (Ê persistence),
+WP-4 (temporal-read CLI flags `--at-text`/`--at-fact` + `impact` REF-traversal),
+WP-5 (α-renamed CNF), WP-6 (registry-snapshot `Lookup` via `internal/registry`
++ I4 rename-stability test), WP-7 (exact-rational VAL — no float64), WP-8
+(validation harness: Fleiss' $\kappa$ + verdict-agreement with asserted floors,
+corpus-derived coordinates, `FALSIFICATION-CANDIDATE` halt path).
 
 ## Build & Run
 
@@ -73,16 +74,22 @@ make test-compiler        # go vet + go test ./... in compiler/
 make cnf-export           # deterministic CNF dump -> export/dump.cnf
 make seal verify-seal     # Ed25519 seal + verification
 make spec                 # sanity-check the D1 documents
-make verify               # Lean mechanization — PLACEHOLDER (no toolchain wired)
-make validate             # agreement harnesses — PLACEHOLDER (validation/ empty)
+make verify               # Lean mechanization — lake build if Lean present, else status
+make validate             # inter-compiler agreement harness (κ≥0.70, VA≥0.90)
 ```
+
+Temporal reads accept `--at-text`/`--at-fact` (RFC3339; default now); the
+`impact <target_iri>` command traverses REF edges valid at those coordinates.
 
 Migrations after the baseline are numbered files in `db/migrations/`; apply in order
 with `psql` as superuser. The baseline `schema.sql` is kept in sync for fresh inits.
 
 ## Status
 
-`spec/` — DRAFT. `compiler/`, `db/` — working, under conformance hardening (WP queue in
-`handoff.md`). `mechanization/` — compiling scaffold, obligations still `sorry`.
-`validation/` — not implemented. All proof obligations in `spec/D1.5` remain
-**conjectures**. See `CHANGELOG.md` for the change history.
+`spec/` — DRAFT. `compiler/`, `db/` — working; the `handoff.md`/`handoff2.md` WP
+queue is fully landed. `mechanization/` — T2 (I1), T3 (I8), T6 (I2) discharged
+with mathlib-free Lean proofs (compilation pending a Lean toolchain in CI); T8
+and T1/C1 remain `sorry`/conjecture. `validation/` — implemented (`make validate`);
+`cmd/interop` computes real inter-compiler κ over the live corpus and
+`cmd/falsify` runs the falsification campaign. All proof obligations in
+`spec/D1.5` remain **conjectures**. See `CHANGELOG.md` for the change history.

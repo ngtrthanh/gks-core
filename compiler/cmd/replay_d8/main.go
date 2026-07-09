@@ -23,7 +23,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"computable-governance/compiler/internal/coord"
 	"computable-governance/compiler/internal/machine"
+	"computable-governance/compiler/internal/registry"
 )
 
 const (
@@ -123,7 +125,13 @@ func getenv(key, def string) string {
 
 func main() {
 	which := flag.String("run", "all", "which D8 run to replay: run1 | run2 | all")
+	atText := flag.String("at-text", "", "eval coordinate t_text (RFC3339; default now)")
+	atFact := flag.String("at-fact", "", "eval coordinate t_fact (RFC3339; default now)")
 	flag.Parse()
+	tText, tFact, err := coord.Parse(*atText, *atFact)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, connString())
@@ -133,15 +141,18 @@ func main() {
 	defer conn.Close(ctx)
 
 	store := &machine.PGStore{Conn: conn, Ctx: ctx}
-	now := time.Now().UTC()
 
-	kernelRows, err := store.LoadKernel(now, now)
+	kernelRows, err := store.LoadKernel(tText, tFact)
 	if err != nil {
 		log.Fatalf("load kernel: %v", err)
 	}
 	view := machine.BuildView(kernelRows)
-	fmt.Printf("K-hat view: %d norms, %d guards, %d powers\n",
-		len(view.Norms), len(view.Guards), len(view.Powers))
+	reg, err := registry.SnapshotAt(ctx, conn, tFact)
+	if err != nil {
+		log.Fatalf("load registry: %v", err)
+	}
+	fmt.Printf("K-hat view: %d norms, %d guards, %d powers; registry %d token(s)\n",
+		len(view.Norms), len(view.Guards), len(view.Powers), len(reg))
 
 	for _, f := range fixtures() {
 		if *which != "all" && "d8-"+*which != f.run {
@@ -165,7 +176,8 @@ func main() {
 
 		eng := &machine.Engine{
 			Store: store, Run: f.run,
-			TText: now, TFact: now,
+			TText: tText, TFact: tFact,
+			Registry: reg,
 			Subjects: f.subjects,
 		}
 		res, err := eng.Replay(view, events)

@@ -11,12 +11,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+
+	"computable-governance/compiler/internal/coord"
 )
 
 type record struct {
@@ -62,10 +65,18 @@ func prettyJSON(raw []byte) string {
 
 const query = `
 SELECT instance_id::text, constructor::text, t_text::text, t_fact::text, payload
-FROM kernel_instance_at(now(), now())
+FROM kernel_instance_at($1, $2)
 ORDER BY constructor, instance_id`
 
 func main() {
+	atText := flag.String("at-text", "", "read coordinate t_text (RFC3339; default now)")
+	atFact := flag.String("at-fact", "", "read coordinate t_fact (RFC3339; default now)")
+	flag.Parse()
+	tText, tFact, err := coord.Parse(*atText, *atFact)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
 
 	conn, err := pgx.Connect(ctx, connString())
@@ -74,7 +85,7 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
-	rows, err := conn.Query(ctx, query)
+	rows, err := conn.Query(ctx, query, tText, tFact)
 	if err != nil {
 		log.Fatalf("query: %v", err)
 	}

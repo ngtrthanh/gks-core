@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -16,8 +17,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"computable-governance/compiler/internal/coord"
 	"computable-governance/compiler/internal/evaluator"
 	"computable-governance/compiler/internal/kernel"
+	"computable-governance/compiler/internal/registry"
 )
 
 func connString() string {
@@ -57,6 +60,14 @@ const (
 )
 
 func main() {
+	atText := flag.String("at-text", "", "read coordinate t_text (RFC3339; default now)")
+	atFact := flag.String("at-fact", "", "read coordinate t_fact (RFC3339; default now)")
+	flag.Parse()
+	tText, tFact, err := coord.Parse(*atText, *atFact)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, connString())
 	if err != nil {
@@ -65,8 +76,8 @@ func main() {
 	defer conn.Close(ctx)
 
 	rows, err := conn.Query(ctx,
-		`SELECT instance_id::text, constructor::text, payload FROM kernel_instance_at(now(), now()) WHERE instance_id::text = ANY($1)`,
-		[]string{id121N1, id121C1, id121G1, id121G2})
+		`SELECT instance_id::text, constructor::text, payload FROM kernel_instance_at($1, $2) WHERE instance_id::text = ANY($3)`,
+		tText, tFact, []string{id121N1, id121C1, id121G1, id121G2})
 	if err != nil {
 		log.Fatalf("query: %v", err)
 	}
@@ -114,9 +125,14 @@ func main() {
 	// * owned/used as principal residence for 3 years  -> passes c1
 	// * realized gain $150,000                          -> passes g1 (<= $250k)
 	// * a prior §121 sale 18 months ago                 -> triggers g2 (within 2y)
-	now := time.Now().UTC()
+	now := tFact
+	reg, err := registry.Snapshot(ctx, conn)
+	if err != nil {
+		log.Fatalf("load registry: %v", err)
+	}
 	env := evaluator.Environment{
-		Now: now,
+		Now:      now,
+		Registry: reg,
 		Vars: map[string]evaluator.Value{
 			"aggregate_use_years": evaluator.VInt(3),
 			"realized_gain":       evaluator.VInt(150_000),

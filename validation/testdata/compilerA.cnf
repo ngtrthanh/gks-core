@@ -1,0 +1,11 @@
+{"locus":"L01","constructor":"NRM","payload":{}}
+{"locus":"L02","constructor":"NRM","payload":{}}
+{"locus":"L03","constructor":"NRM","payload":{}}
+{"locus":"L04","constructor":"NRM","payload":{}}
+{"locus":"L05","constructor":"CLS","payload":{}}
+{"locus":"L06","constructor":"CLS","payload":{}}
+{"locus":"L07","constructor":"CLS","payload":{}}
+{"locus":"L08","constructor":"GRD","payload":{}}
+{"locus":"L09","constructor":"GRD","payload":{}}
+{"locus":"L10","constructor":"NRM","payload":{}}
+{"locus":"LB1","constructor":"NRM","payload":{"op":"boundary","name":"OT-1","label":"appropriate"}}

@@ -1,0 +1,18 @@
+[
+  {"unit": "labour:Điều-90 (wage ≥ minimum)", "constructor": "VAL",
+   "ast": {"op": "cmp", "cmp": ">=", "args": [{"op": "var", "name": "wage"}, {"op": "lookup", "name": "min_wage"}]}},
+  {"unit": "labour:Điều-5 (worker has right)", "constructor": "NRM",
+   "ast": {"op": "pred", "name": "has_right", "args": [{"op": "var", "name": "worker"}]}},
+  {"unit": "iso:8.7 (nonconforming classification)", "constructor": "CLS",
+   "ast": {"op": "not", "args": [{"op": "pred", "name": "conforms_to_requirements"}]}},
+  {"unit": "policy:concession authority (power)", "constructor": "PWR",
+   "ast": {"op": "pred", "name": "designated_authority"}},
+  {"unit": "cross-ref: KPI → P-11 §4", "constructor": "REF",
+   "ast": null},
+  {"unit": "ADVERSARIAL: 'for ALL transactions, without bound'", "constructor": "NRM",
+   "ast": {"op": "forall", "name": "transaction", "args": [{"op": "pred", "name": "audited", "args": [{"op": "var", "name": "transaction"}]}]}},
+  {"unit": "ADVERSARIAL: proposes an 8th constructor", "constructor": "OBLIGATION2",
+   "ast": {"op": "pred", "name": "x"}},
+  {"unit": "ADVERSARIAL: fixpoint / self-reference", "constructor": "GRD",
+   "ast": {"op": "fix", "args": [{"op": "var", "name": "self"}]}}
+]

@@ -211,7 +211,11 @@ func main() {
 		return
 	}
 
-	instances, err := buildInstances(time.Now().UTC())
+	// Coordinates are DERIVED from the corpus, not wall-clock (WP-8, I8): the
+	// current §121 gain-exclusion took effect for sales after 1997-05-06
+	// (Taxpayer Relief Act of 1997). A fixed corpus epoch makes the CNF export
+	// byte-reproducible across independent compilers.
+	instances, err := buildInstances(time.Date(1997, time.May, 7, 0, 0, 0, 0, time.UTC))
 	if err != nil {
 		log.Fatalf("build instances: %v", err)
 	}

@@ -203,7 +203,9 @@ func main() {
 		return
 	}
 
-	now := time.Now().UTC()
+	// Corpus-derived coordinate (WP-8, I8): ISO 9001:2015 was published
+	// 2015-09-15. Fixed epoch → reproducible CNF across compilers.
+	now := time.Date(2015, time.September, 15, 0, 0, 0, 0, time.UTC)
 	validity, err := kernel.Since(now).Value()
 	if err != nil {
 		log.Fatalf("range literal: %v", err)

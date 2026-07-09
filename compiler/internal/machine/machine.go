@@ -136,6 +136,8 @@ type Engine struct {
 	Run   string
 	// Eval coordinates ⟨t_text, t_fact⟩ (I6). Environment.Now = TFact.
 	TText, TFact time.Time
+	// Registry is the R snapshot loaded at eval start (WP-6); OpLookup reads it.
+	Registry map[string]evaluator.Value
 	// Subjects restricts verdict evaluation to these norm instance ids
 	// (empty = all norms in the view).
 	Subjects []string
@@ -181,6 +183,7 @@ func (e *Engine) Replay(view *View, events []Event) (*Result, error) {
 	env := evaluator.Environment{
 		Now:        e.TFact,
 		Vars:       map[string]evaluator.Value{},
+		Registry:   e.Registry,
 		Predicates: map[string]bool{},
 		Domains:    map[string][]evaluator.Fact{},
 	}

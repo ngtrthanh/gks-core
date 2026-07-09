@@ -19,7 +19,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/big"
 	"os"
 	"time"
 
@@ -27,11 +26,13 @@ import (
 
 	"computable-governance/compiler/internal/evaluator"
 	"computable-governance/compiler/internal/kernel"
+	"computable-governance/compiler/internal/registry"
 )
 
 const (
 	idV4 = "44000000-0000-4000-8000-000000000006" // VAL KPI-SEC-03
 	idN7 = "77000000-0000-4000-8000-000000000006" // NRM achieve(v4)
+	idR6 = "44000000-0000-4000-8000-0000000000f6" // REF v4 -> P-11 §4
 
 	thresholdToken = "policy-p11-§4.threshold"
 )
@@ -107,7 +108,9 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
-	validity, err := kernel.Since(time.Now().UTC()).Value()
+	// Corpus-derived coordinate (WP-8, I8): P-11 policy effective epoch
+	// (declared, fixed) → reproducible CNF across compilers.
+	validity, err := kernel.Since(time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)).Value()
 	if err != nil {
 		log.Fatalf("range: %v", err)
 	}
@@ -150,9 +153,14 @@ func main() {
 	}
 	insert(idV4, kernel.VAL, kpiVAL(), "kpi-cat : SEC-03 : row", "row")
 	insert(idN7, kernel.NRM, n7, "kpi-cat : SEC-03-owner : row", "row")
+	// REF: the KPI's target embeds a normative reference to P-11 §4 (the
+	// threshold source) — a cross-corpus designation traversable by `impact`.
+	insert(idR6, kernel.REF,
+		kernel.REFPayload{Source: idV4, TargetIRI: "policy-p11:§4", Mode: "cite"},
+		"kpi-cat : SEC-03-ref : row", "row")
 
 	// --- read the registry back and evaluate (exact rational, no float64).
-	reg, err := loadRegistry(ctx, conn)
+	reg, err := registry.Snapshot(ctx, conn)
 	if err != nil {
 		log.Fatalf("load registry: %v", err)
 	}
@@ -188,48 +196,7 @@ func main() {
 
 // loadRegistry reads the latest version of every registry token into exact
 // evaluator Values. A {"rat":"..."} value becomes a KRat; other JSON scalars
-// map to their kinds. (Preview of the WP-6 registry-snapshot wiring.)
-func loadRegistry(ctx context.Context, conn *pgx.Conn) (map[string]evaluator.Value, error) {
-	rows, err := conn.Query(ctx, `
-		SELECT DISTINCT ON (token) token, value
-		FROM registry ORDER BY token, version DESC`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	out := map[string]evaluator.Value{}
-	for rows.Next() {
-		var token string
-		var raw []byte
-		if err := rows.Scan(&token, &raw); err != nil {
-			return nil, err
-		}
-		var r ratJSON
-		if json.Unmarshal(raw, &r) == nil && r.Rat != "" {
-			q, ok := new(big.Rat).SetString(r.Rat)
-			if !ok {
-				return nil, fmt.Errorf("registry %s: bad rational %q", token, r.Rat)
-			}
-			out[token] = evaluator.VRat(q)
-			continue
-		}
-		var scalar any
-		if err := json.Unmarshal(raw, &scalar); err != nil {
-			return nil, fmt.Errorf("registry %s: %w", token, err)
-		}
-		switch v := scalar.(type) {
-		case string:
-			out[token] = evaluator.VStr(v)
-		case bool:
-			out[token] = evaluator.VBool(v)
-		case float64:
-			out[token] = evaluator.VInt(int64(v))
-		}
-	}
-	return out, rows.Err()
-}
-
+// map to their kinds. (Now provided by internal/registry — WP-6.)
 func verdictLabel(ok bool) string {
 	if ok {
 		return "COMPLIANT"

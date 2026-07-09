@@ -15,15 +15,17 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 
+	"computable-governance/compiler/internal/coord"
 	"computable-governance/compiler/internal/evaluator"
 	"computable-governance/compiler/internal/kernel"
+	"computable-governance/compiler/internal/registry"
 )
 
 const (
@@ -63,6 +65,14 @@ func short(id string) string {
 const bar = "──────────────────────────────────────────────────────────────────────────"
 
 func main() {
+	atText := flag.String("at-text", "", "read coordinate t_text (RFC3339; default now)")
+	atFact := flag.String("at-fact", "", "read coordinate t_fact (RFC3339; default now)")
+	flag.Parse()
+	tText, tFact, err := coord.Parse(*atText, *atFact)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, connString())
 	if err != nil {
@@ -73,8 +83,8 @@ func main() {
 	// READ-ONLY load of the four instances we need.
 	payloads := map[string][]byte{}
 	rows, err := conn.Query(ctx,
-		`SELECT instance_id::text, payload FROM kernel_instance_at(now(), now()) WHERE instance_id::text = ANY($1)`,
-		[]string{idN2a, idC2, idN2b, idP1, idC3})
+		`SELECT instance_id::text, payload FROM kernel_instance_at($1, $2) WHERE instance_id::text = ANY($3)`,
+		tText, tFact, []string{idN2a, idC2, idN2b, idP1, idC3})
 	if err != nil {
 		log.Fatalf("query: %v", err)
 	}
@@ -103,8 +113,13 @@ func main() {
 	// Base environment: the output fails to conform (=> nonconforming); it has
 	// not yet been corrected; the actor is a designated concession authority; no
 	// concession has been granted yet.
+	reg, err := registry.Snapshot(ctx, conn)
+	if err != nil {
+		log.Fatalf("load registry: %v", err)
+	}
 	env := evaluator.Environment{
-		Now: time.Now().UTC(),
+		Now:      tFact,
+		Registry: reg,
 		Predicates: map[string]bool{
 			"conforms_to_requirements":        false,
 			"corrected":                       false,

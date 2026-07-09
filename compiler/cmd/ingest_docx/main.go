@@ -50,10 +50,11 @@ type Extracted struct {
 }
 
 var (
-	reChapter  = regexp.MustCompile(`^Chương\s+[IVXLCDM0-9]+`)
-	reArticle  = regexp.MustCompile(`^Điều\s+(\d+)\s*\.?\s*(.*)$`)
-	reDefined  = regexp.MustCompile(`^(?:\d+\.\s*)?(.{2,60}?)\s+là\s+\p{L}`)
-	reDuration = regexp.MustCompile(`(\d{1,4})\s*(ngày làm việc|ngày|tháng|năm|tuần|giờ)`)
+	reChapter   = regexp.MustCompile(`^Chương\s+[IVXLCDM0-9]+`)
+	reArticle   = regexp.MustCompile(`^Điều\s+(\d+)\s*\.?\s*(.*)$`)
+	reDefined   = regexp.MustCompile(`^(?:\d+\.\s*)?(.{2,60}?)\s+là\s+\p{L}`)
+	reDuration  = regexp.MustCompile(`(\d{1,4})\s*(ngày làm việc|ngày|tháng|năm|tuần|giờ)`)
+	reEffective = regexp.MustCompile(`ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})`)
 )
 
 var (
@@ -147,6 +148,29 @@ func buildAST(modality, iso string) *kernel.Expr {
 		return kernel.Within(iso, "", base)
 	}
 	return base
+}
+
+// effectiveDate derives the corpus's promulgated effective date from a line
+// containing "hiệu lực" plus a "ngày D tháng M năm YYYY" date; falls back to a
+// declared epoch (the Labour Code took effect 2021-01-01).
+func effectiveDate(paras []string) time.Time {
+	fallback := time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC)
+	for _, p := range paras {
+		if !strings.Contains(strings.ToLower(p), "hiệu lực") {
+			continue
+		}
+		m := reEffective.FindStringSubmatch(p)
+		if m == nil {
+			continue
+		}
+		d, _ := strconv.Atoi(m[1])
+		mo, _ := strconv.Atoi(m[2])
+		y, _ := strconv.Atoi(m[3])
+		if mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && y >= 1900 {
+			return time.Date(y, time.Month(mo), d, 0, 0, 0, 0, time.UTC)
+		}
+	}
+	return fallback
 }
 
 func detUUID(s string) string {
@@ -333,7 +357,11 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
-	validity, err := kernel.Since(time.Now().UTC()).Value()
+	// Corpus-derived coordinate (WP-8, I8): parse the promulgated effective
+	// date ("có hiệu lực kể từ ngày …") from the text; fall back to a declared
+	// epoch. Deterministic → reproducible CNF across compilers (no time.Now()).
+	epoch := effectiveDate(paras)
+	validity, err := kernel.Since(epoch).Value()
 	if err != nil {
 		log.Fatalf("range: %v", err)
 	}

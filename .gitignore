@@ -5,3 +5,9 @@
 # Go build output
 /compiler/**/*.test
 *.out
+
+# Stray Go build binaries accidentally emitted at the compiler module root
+/compiler/falsify
+/compiler/interop
+# Generated interop CNF exports (regenerate via `go run ./cmd/interop`)
+/validation/interop/*.cnf

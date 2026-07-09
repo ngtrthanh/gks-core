@@ -1,0 +1,10 @@
+{
+  "unit": "corpus:hypothetical §X (universal audit clause)",
+  "constructor": "NRM",
+  "note": "Text: 'the duty holds for ALL transactions, without bound' — appears to need unbounded ∀ quantification, which T (sub-Turing) does not admit.",
+  "ast": {
+    "op": "forall",
+    "name": "transaction",
+    "args": [{"op": "pred", "name": "audited", "args": [{"op": "var", "name": "transaction"}]}]
+  }
+}

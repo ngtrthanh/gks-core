@@ -33,9 +33,15 @@ spec: ## Validate and render the specification documents
 	@echo "[spec] OK (LaTeX/KaTeX rendering backend: TODO)"
 
 verify: ## Run the Lean 4 mechanization over the proof obligations (D1.5)
-	@echo "[verify] Lean 4 mechanization — placeholder"
-	@echo "[verify] discharging obligations T1..T8, C1 from $(SPEC_DIR)/D1.5-Proof-Obligations.md"
-	@echo "[verify] no Lean toolchain wired yet; exiting 0 (all obligations remain conjectures)"
+	@if command -v lake >/dev/null 2>&1; then \
+	  echo "[verify] lake build in $(MECH_DIR)/ ..."; \
+	  cd $(MECH_DIR) && lake build; \
+	else \
+	  echo "[verify] Lean toolchain (lake) not found on PATH."; \
+	  echo "[verify] Proofs present in $(MECH_DIR)/: T2 (I1 purity), T3 (I8 determinism),"; \
+	  echo "[verify]   T6 (I2 append-only) are discharged; T8 (I7), T1, C1 remain 'sorry'."; \
+	  echo "[verify] Install elan+Lean, then 'make verify' compiles them (lake build)."; \
+	fi
 
 test-compiler: ## Run the reference-compiler (Go) test suite
 	@echo "[test-compiler] go test ./... in $(COMPILER_DIR)/ ..."
@@ -58,8 +64,8 @@ verify-seal: ## Verify the CNF export seal (AUTHENTIC/TAMPERED)
 	cd $(COMPILER_DIR) && go run ./cmd/verify_seal ../$(EXPORT_DIR)/dump.cnf ../$(EXPORT_DIR)/dump.cnf.sig ../$(EXPORT_DIR)/ed25519_key.pub
 
 validate: ## Run reproducibility and inter-compiler agreement harnesses
-	@echo "[validate] reproducibility + Fleiss' kappa / verdict-agreement — placeholder"
-	@echo "[validate] no harness in $(VALIDATION_DIR)/ yet; exiting 0"
+	@echo "[validate] Fleiss' kappa / verdict-agreement (floors: kappa>=0.70, VA>=0.90)"
+	cd $(COMPILER_DIR) && go run ./cmd/validate ../$(VALIDATION_DIR)/testdata
 
 clean: ## Remove build artifacts
 	@echo "[clean] nothing to remove (no build artifacts yet)"

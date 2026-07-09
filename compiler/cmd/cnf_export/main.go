@@ -19,6 +19,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -26,6 +27,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"computable-governance/compiler/internal/cnf"
+	"computable-governance/compiler/internal/coord"
 	"computable-governance/compiler/internal/kernel"
 )
 
@@ -99,9 +101,16 @@ type record struct {
 }
 
 func main() {
+	atText := flag.String("at-text", "", "read coordinate t_text (RFC3339; default now)")
+	atFact := flag.String("at-fact", "", "read coordinate t_fact (RFC3339; default now)")
+	flag.Parse()
+	tText, tFact, err := coord.Parse(*atText, *atFact)
+	if err != nil {
+		log.Fatal(err)
+	}
 	outPath := "dump.cnf"
-	if len(os.Args) > 1 {
-		outPath = os.Args[1]
+	if a := flag.Arg(0); a != "" {
+		outPath = a
 	}
 
 	ctx := context.Background()
@@ -114,8 +123,8 @@ func main() {
 	rows, err := conn.Query(ctx, `
 		SELECT k.instance_id::text, k.constructor::text, k.t_text::text, k.t_fact::text,
 		       k.payload, COALESCE(s.locus, '')
-		FROM kernel_instance_at(now(), now()) k
-		LEFT JOIN source_map s ON s.instance_pk = k.pk`)
+		FROM kernel_instance_at($1, $2) k
+		LEFT JOIN source_map s ON s.instance_pk = k.pk`, tText, tFact)
 	if err != nil {
 		log.Fatalf("query: %v", err)
 	}

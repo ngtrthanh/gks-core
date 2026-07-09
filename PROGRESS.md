@@ -1,6 +1,6 @@
 # PROGRESS REPORT — gks-core vs. the D0 Maturity Roadmap
 
-**Date:** 2026-07-09 UTC (current through tag `v0.4.5`) · **Author:** Kiro (Engineering)
+**Date:** 2026-07-09 UTC (current through tag `v0.6.0`) · **Author:** Kiro (Engineering)
 **Baselines:** `spec/D0v5.md` (D0 v1.1, FROZEN), `spec/D1.1–D1.5`,
 `handoff.md`/`handoff2.md`/`handoff3.md`, `CHANGELOG.md`.
 **Verification basis:** `go build/vet/test ./...` green; live dev DB (Postgres 18,

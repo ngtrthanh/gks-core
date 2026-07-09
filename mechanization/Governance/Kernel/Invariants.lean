@@ -6,8 +6,8 @@ mathlib-free (they concern our own inductive model), so `lake build` needs only
 the Lean toolchain — no mathlib download.
 
 * **T6 / I2** — append-only monotonicity of K̂: PROVED (`append_only_monotone`).
-* **T8 / I7** — well-foundedness of the stratification order: STATED, `sorry`
-  (intended discharge: the core instance `Nat.lt_wfRel.wf`).
+* **T8 / I7** — well-foundedness of the stratification order: PROVED
+  (`strata_wellFounded`, via the Lean-core instance `Nat.lt_wfRel.wf`).
 
 `T1` (decidability of `T`) and `C1` (minimality of ⟨B, T⟩) are research-grade
 and are NOT stated as trivial placeholders here — they remain conjectures in
@@ -36,12 +36,12 @@ theorem append_only_monotone (k : KB) (x i : Nat) (h : i ∈ k) :
 /--
 **T8 — Stratified-reflection well-foundedness (Invariant I7).** Schema-level
 matching strictly decreases the stratum (a `Nat`), so the match relation is
-well-founded and reflection terminates. Intended discharge: `Nat.lt_wfRel.wf`.
-Left as `sorry` pending toolchain compilation (a `sorry` still lets `lake build`
-succeed, with a warning).
+well-founded and reflection terminates. Discharged by the Lean-core instance
+`Nat.lt_wfRel.wf : WellFounded Nat.lt` (the `<`-relation on `Nat` used by the
+termination checker); no mathlib required.
 -/
-theorem strata_wellFounded : WellFounded (fun a b : Nat => a < b) := by
-  sorry
+theorem strata_wellFounded : WellFounded (fun a b : Nat => a < b) :=
+  Nat.lt_wfRel.wf
 
 end Kernel
 end Governance

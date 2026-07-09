@@ -1,0 +1,51 @@
+name: Lean mechanization (D1.5 proofs)
+
+# Compiles the mathlib-free Lean development in `mechanization/` on GitHub's
+# runners, which CAN reach the Lean toolchain hosts. `lake build` fails the job
+# if any proof (T2/T3/T6/T8) does not type-check, and `--wfail`/`sorry` handling
+# below ensures a lingering `sorry` is surfaced.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mechanization/**'
+      - '.github/workflows/lean.yml'
+  pull_request:
+    paths:
+      - 'mechanization/**'
+      - '.github/workflows/lean.yml'
+  workflow_dispatch:
+
+jobs:
+  lake-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mechanization
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install elan (Lean toolchain manager)
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o elan-init.sh
+          bash elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Toolchain versions
+        run: |
+          lake --version
+          lean --version
+
+      - name: Build (type-check all proofs)
+        run: lake build
+
+      - name: Assert no `sorry` remains in the sources
+        run: |
+          if grep -rnw --include='*.lean' 'sorry' .; then
+            echo "::error::a 'sorry' remains in the Lean sources — proof obligation not discharged"
+            exit 1
+          fi
+          echo "no 'sorry' in Lean sources"

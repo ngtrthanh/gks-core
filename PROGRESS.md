@@ -43,13 +43,15 @@ port 5435); `make validate` PASS; `cmd/interop`, `cmd/falsify` run.
 | I2 | Single writer / append-only | DB trigger + RBAC (`e_writer`); invariant tests reject UPDATE/DELETE; Lean T6 | 🟢 enforced + tested |
 | I3 | Kernel closure | 6-constructor enum; `FALSIFICATION-CANDIDATE` screen halts extensions | 🟢 held (Track C) |
 | I4 | Registry inertness | pure rename-stability test (`internal/registry`) | 🟢 tested (Go); Lean T4 open |
-| I5 | Presentation erasure | source_map is P̂; drop-P̂-preserves-verdicts | 🔴 **not tested** |
+| I5 | Presentation erasure | verdict identifier = `CanonicalHash(ast)` only; erasure + adversarial-mutation test over 392 stored instances | 🟢 **tested** |
 | I6 | Bitemporal totality | `tix_explicit_lower` CHECK; verdicts carry coordinates; temporal-read CLI | 🟢 enforced |
 | I7 | Stratified reflection | Lean T8 stated | 🟡 `sorry` (unproven) |
 | I8 | Pass determinism | byte-stable CNF; resolver tie-break; no float64; Lean T3 | 🟢 held + proof (uncompiled) |
 | I9 | Source anchoring | UNIQUE(source_map.instance_pk) + totality (410/410 mapped, 0 unmapped) + tests | 🟢 enforced + tested |
 
-**Weakest links:** I5 (untested), I7 (unproven), and the *compilation* of the I1/I2/I8 proofs.
+**Weakest links:** I7 (unproven), and the *compilation* of the I1/I2/I8 proofs.
+(I5 was closed 2026-07-09 with `TestI5PresentationErasure{Pure,Corpus}` — erasure
++ adversarial mutation of the presentation envelope over all 392 stored instances.)
 
 ---
 
@@ -76,7 +78,8 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
    review-ready but unproven-in-CI. → run in an env with GitHub-asset access.
 2. **No truly independent second compiler.** The κ number is real but
    intra-team. A genuine Phase-1 claim needs a separate implementation.
-3. **I5 has no test; I7 unproven.** Two invariants weaker than the rest.
+3. **I7 unproven.** T8 (well-foundedness) is `sorry`; the one remaining invariant
+   weaker than the rest. (I5 closed 2026-07-09.)
 4. **Extraction depth (Track D).** κ baseline is 0.7877; clause-level splitting +
    multi-modality is the lever to raise it.
 5. **Pending Agent-0 decisions** (unchanged): TIX-enum drop vs. handoff §6;
@@ -86,8 +89,9 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 
 1. Compile the Lean proofs in a GitHub-reachable CI env; discharge **T8** and
    close Phase 2's tractable set.
-2. Add the **I5 erasure test** (drop P̂/source_map → verdicts unchanged) — cheap,
-   closes the weakest invariant gap.
+2. ~~Add the **I5 erasure test**~~ — **DONE** 2026-07-09
+   (`TestI5PresentationErasure{Pure,Corpus}`); the invariant scorecard now has
+   no untested invariant.
 3. **Track D** extraction depth against the 0.7877 κ baseline.
 4. Broaden **continuous ingestion** to a second domain to genuinely exercise the
    Registry Law.

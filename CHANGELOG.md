@@ -2,6 +2,21 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — I5 presentation erasure now mechanically tested
+
+- **Milestone: the invariant scorecard has no untested invariant.** New
+  `internal/invariants/i5_erasure_test.go`:
+  - `TestI5PresentationErasurePure` — a fixed AST wrapped in a full presentation
+    envelope, a bare `{kind,ast}` envelope, and an adversarially-mutated envelope
+    all yield the same Verdict Identifier `cnf.CanonicalHash(ast)`.
+  - `TestI5PresentationErasureCorpus` — proves I5 over the **live docx corpus**:
+    erasing and mutating the presentation envelope (`article/chapter/cue/modality/
+    temporal/text` + `source_map` locus) leaves the verdict unchanged for **all
+    392 stored instances** (non-vacuous: all 392 carried erasable presentation).
+- `PROGRESS.md` scorecard updated: I5 🔴→🟢; remaining weak links are I7 (`sorry`)
+  and CI-compilation of the I1/I2/I8 Lean proofs.
+- `go build/vet/test ./...` green.
+
 ## 2026-07-07 — Tracks A/B/C (post-handoff2; see handoff3.md)
 
 - **Track A — mechanized semantics (Phase 2).** Mathlib-free Lean proofs in

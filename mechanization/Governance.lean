@@ -7,3 +7,4 @@ Semantic Algebra development.
 
 import Governance.Algebra.AST
 import Governance.Algebra.Semantics
+import Governance.Kernel.Invariants

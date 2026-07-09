@@ -73,18 +73,27 @@ def evalWithEnv (env : Env) (e : Expr) : Value × Env :=
   (eval env e, env)
 
 /--
-**Purity (Invariant I1).** Evaluating any term of `T` has empty write-effect:
-the environment produced is *identical* to the environment received. Hence
-`eval` returns a `Value` and never a mutated `Env`.
+**T2 — Purity (Invariant I1).** Evaluating any term of `T` has empty
+write-effect: the environment produced is *identical* to the environment
+received. Hence `eval` returns a `Value` and never a mutated `Env`.
 
-This mechanizes `D1.3 Prop. 3.1` and proof obligation `D1.5 §T2`.
-
-The proof is left as `sorry` per the Phase-2 mandate; it is discharged by `rfl`
-because `(evalWithEnv env e).2` reduces definitionally to `env`.
+Mechanizes `D1.3 Prop. 3.1` / `D1.5 §T2`. Discharged by `rfl`:
+`(evalWithEnv env e).2` reduces definitionally to `env`.
 -/
 theorem eval_is_pure (env : Env) (e : Expr) :
-    (evalWithEnv env e).2 = env := by
-  sorry
+    (evalWithEnv env e).2 = env := rfl
+
+/--
+**T3 — Determinism (Invariant I8).** Evaluation is a (total) function of
+⟨environment, term⟩: any two results of evaluating the same term in the same
+environment coincide. This is the functional form of the D1.4 §5 confluence
+theorem (there is no nondeterministic rule selection in `eval`).
+
+Mechanizes `D1.5 §T3`.
+-/
+theorem eval_deterministic (env : Env) (e : Expr) {v₁ v₂ : Value}
+    (h₁ : eval env e = v₁) (h₂ : eval env e = v₂) : v₁ = v₂ :=
+  h₁.symm.trans h₂
 
 end Algebra
 end Governance

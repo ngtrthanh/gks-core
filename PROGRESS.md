@@ -30,7 +30,7 @@ port 5435); `make validate` PASS; `cmd/interop`, `cmd/falsify` run.
 | --- | --- | --- |
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
 | **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. |
-| **8.3 Formal Mechanization** | 🟡 **Partial** | I1/I8/I2 proofs written (Lean, mathlib-free); **compilation pending** a Lean toolchain in CI. I5, I7 not mechanized. |
+| **8.3 Formal Mechanization** | 🟡 **Partial** | I1/I8/I2 proofs written (Lean, mathlib-free); **compilation pending** a Lean toolchain in CI; T8 (I7) still `sorry`. I5 and I7's operational content are **mechanically tested in Go** (not Lean-*proved*): presentation-erasure over 392 instances, acyclic reflection graph + store-wide sub-Turing screen (410 instances). Distinction: *tested* ≠ *machine-proved*. |
 | **8.4 Continuous Ingestion** | 🟡 **Partial** | Store spans **4 real normative domains** (VN labour statute, ISO 9001, US tax §121, KPI/policy). `TestRegistryLawBoundedBasisAcrossDomains` proves the basis stays = B (6 constructors, Θ(1)) across all domains — no domain adds a constructor. **Track D (2026-07-09):** corpus is already clause-atomic (`cmd/trackd`, segmentation ×1.00). **Gap:** ingestion is not yet *continuous*/automated (one-shot per corpus); residual classifier disagreement is semantic (cue modelling). |
 
 ---

@@ -17,7 +17,7 @@ implementation (see `handoff.md` for the open work queue).
 | `spec/` | Formal mathematical specifications (D1 series): objects, type system, grammar, operational semantics, proof obligations. | Draft, complete |
 | `db/` | PostgreSQL bitemporal K̂ store: baseline `schema.sql` + numbered migrations. | Working |
 | `compiler/` | Go reference implementation: kernel domain model, sub-Turing T evaluator, defeasible resolver, CNF export, ingest/simulate/verify commands. | Working |
-| `mechanization/` | Lean 4 development (mathlib-free) for the D1.5 obligations. | T2/T3/T6/T8 proved and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`); T1/C1 open conjectures; `make verify` runs `lake build` locally |
+| `mechanization/` | Lean 4 development (mathlib-free) for the D1.5 obligations. | T1/T2/T3/T6/T8 proved and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`); C1 open conjecture; `make verify` runs `lake build` locally |
 | — | Ê execution layer: bitemporal event replay → persisted verdicts. | Working (`db/migrations/0004`, `compiler/internal/machine`, `cmd/replay_d8`) |
 | `validation/` | Reproducibility and inter-compiler agreement harnesses (Fleiss' $\kappa$, verdict agreement). | Implemented (`make validate`) |
 | `deliver/`, `D8.md` | Benchmark fixture narratives (D8 Runs) with expected outcomes. | Reference |
@@ -87,10 +87,10 @@ with `psql` as superuser. The baseline `schema.sql` is kept in sync for fresh in
 ## Status
 
 `spec/` — DRAFT. `compiler/`, `db/` — working; the `handoff.md`/`handoff2.md` WP
-queue is fully landed. `mechanization/` — T2 (I1), T3 (I8), T6 (I2), T8 (I7)
-proved with mathlib-free Lean proofs that **compile in CI**
-(`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`); T1 (decidability) and
-C1 (minimality) remain research conjectures. `validation/` — implemented (`make validate`);
+queue is fully landed. `mechanization/` — T1 (decidability+termination), T2 (I1),
+T3 (I8), T6 (I2), T8 (I7) proved with mathlib-free Lean proofs that **compile in
+CI** (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`); C1 (minimality)
+remains a research conjecture. `validation/` — implemented (`make validate`);
 `cmd/interop` computes real inter-compiler κ over the live corpus and
-`cmd/falsify` runs the falsification campaign. The remaining D1.5 obligations
-(T1/C1) are **conjectures**. See `CHANGELOG.md` for the change history.
+`cmd/falsify` runs the falsification campaign. The remaining D1.5 obligation
+(C1) is a **conjecture**. See `CHANGELOG.md` for the change history.

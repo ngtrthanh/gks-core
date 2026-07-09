@@ -1,6 +1,6 @@
 # PROGRESS REPORT — gks-core vs. the D0 Maturity Roadmap
 
-**Date:** 2026-07-09 UTC (current through tag `v0.7.0`) · **Author:** Kiro (Engineering)
+**Date:** 2026-07-09 UTC (current through tag `v0.8.0`) · **Author:** Kiro (Engineering)
 **Baselines:** `spec/D0v5.md` (D0 v1.1, FROZEN), `spec/D1.1–D1.5`,
 `handoff.md`/`handoff2.md`/`handoff3.md`, `CHANGELOG.md`.
 **Verification basis:** `go build/vet/test ./...` green; live dev DB (Postgres 18,
@@ -14,7 +14,7 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 > and T8 (I7) type-check in GitHub Actions (Lean 4.31.0, zero `sorry`). The kernel
 > remains provisionally intact (no falsification triggered) but NOT yet *confirmed*.
 > Remaining open items are research-grade, not engineering blockers: a genuinely
-> independent second compiler (Phase 1), and the T1/C1 conjectures.
+> independent second compiler (Phase 1), and the C1 (minimality) conjecture.
 
 ---
 
@@ -24,7 +24,7 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 | --- | --- | --- | --- |
 | **0 — Kernel Discovery** | Establish ⟨B, T⟩ and the constitution | ✅ **Complete** | D0 v1.1 frozen; `spec/D1.1–D1.5`. |
 | **1 — Kernel Validation** | Empirical stress-testing; independent multi-compiler verification | 🟡 **Partial** | Two benchmarks (§121, ISO 8.7) + KPI + a 400+-instance labour corpus across **4 domains**; real inter-compiler κ=0.7877 (`cmd/interop`) and a fresh-vs-fresh κ=0.8380 (`cmd/trackd`); falsification campaign (`cmd/falsify`) + whole-store screen clean (410 rows); Registry Law Θ(1) verified across domains. **Gap:** no *organizationally independent* second compiler; single implementation. |
-| **2 — Mechanized Semantics** | Machine-checked invariant proofs | 🟢 **Tractable set done** | T2 (I1), T3 (I8), T6 (I2), T8 (I7) proved mathlib-free and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`). **Remaining (research-grade):** T1 (decidability), C1 (minimality) open conjectures. |
+| **2 — Mechanized Semantics** | Machine-checked invariant proofs | 🟢 **Tractable set done** | T1 (decidability+termination), T2 (I1), T3 (I8), T6 (I2), T8 (I7) proved mathlib-free and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`); plus D1.2 uniqueness-of-sorts. **Remaining (research-grade):** C1 (minimality); T4/T5/T7 (have Go tests, Lean-mechanizable later); full T1 over the `Count`/`Window` productions. |
 | **3 — Industrial Compiler** | Production-scale passes enforcing invariants by construction | 🟢 **Substantial** | Go + PostgreSQL: bitemporal K̂ store, pure Ŝ evaluator + defeasible resolver, persisted Ê (replay → verdicts), CNF export + Ed25519 seal, temporal-read CLI, registry snapshots, exact-rational VAL. WP-1…WP-8 landed. **Gap:** Track D showed extraction is already clause-atomic; remaining gaps are *scale* beyond the dev corpus and *automated/continuous* ingestion. |
 
 ---
@@ -35,7 +35,7 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 | --- | --- | --- |
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
 | **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. **Track D datapoint:** two *fresh* independent classifiers agree at κ=0.8380 (`cmd/trackd`), isolating the Track B gap to the older stored assignments rather than textual ambiguity. |
-| **8.3 Formal Mechanization** | 🟢 **Met (tractable set)** | T2 (I1), T3 (I8), T6 (I2), T8 (I7) are mathlib-free Lean proofs that **compile in CI** (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`). I5 and additional I7 content are also **Go-tested** over the store. Open: T1/C1 research conjectures. |
+| **8.3 Formal Mechanization** | 🟢 **Met (tractable set)** | T1 (decidability+termination), T2 (I1), T3 (I8), T6 (I2), T8 (I7) + D1.2 uniqueness-of-sorts are mathlib-free Lean proofs that **compile in CI** (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`). I5 and additional I7 content are also **Go-tested** over the store. Open: C1 (minimality); T4/T5/T7 mechanizable later. |
 | **8.4 Continuous Ingestion** | 🟢 **Substantial** | Store spans **4 real normative domains**; `TestRegistryLawBoundedBasisAcrossDomains` proves basis = B (Θ(1)) across all. **Continuous control plane** (`cmd/ingest_run` + `ingestion_run` ledger, migration 0006): manifest-driven, **digest-idempotent**, ledgered — a re-run over an unchanged corpus is a safe no-op (UP-TO-DATE→skip; verified 0-delta with Registry Law HELD). Idempotency is enforced in the control plane because `kernel_instance`'s EXCLUDE constraint rejects overlapping re-inserts. **Track D:** corpus already clause-atomic. **Gap:** scheduling is external (cron/CI); one unsupervised corpus so far. |
 
 ---
@@ -57,7 +57,8 @@ multi-domain Registry Law all pass; the Lean mechanization **compiles in CI**
 **Weakest links — all closed at the invariant level.** Every invariant now has a
 passing test and/or a CI-compiled Lean proof (I5 closed 2026-07-09; T8/I7 proved
 2026-07-09 via `Nat.lt_wfRel.wf`). The remaining open items are the *research
-conjectures* T1 (decidability) and C1 (minimality) — not invariant gaps.
+conjecture* C1 (minimality) — not an invariant gap (T1 was proved & CI-compiled
+2026-07-09).
 
 ---
 
@@ -83,7 +84,7 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 1. **Mechanization CI-verified — resolved.** T2/T3/T6/T8 compile in GitHub Actions
    (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`). The local toolchain
    block (elan DNS / GitHub assets) is bypassed by running `lake build` on GitHub
-   runners. Open (research): T1 decidability, C1 minimality.
+   runners. Open (research): C1 minimality (T1 discharged 2026-07-09).
 2. **No truly independent second compiler.** The κ number is real but
    intra-team. A genuine Phase-1 claim needs a separate implementation.
 3. **I7 discharged — resolved.** T8 (`strata_wellFounded`) proved via the Lean-core
@@ -102,10 +103,11 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 
 ## 6. Recommended next steps (priority order)
 
-1. ~~Compile the Lean proofs in a GitHub-reachable CI env; discharge **T8**~~ —
-   **DONE** 2026-07-09: `.github/workflows/lean.yml` compiles T2/T3/T6/T8 on
-   GitHub Actions (Lean 4.31.0, zero `sorry`); T8 discharged. Remaining Phase 2:
-   the **T1** (decidability) and **C1** (minimality) research conjectures.
+1. ~~Compile the Lean proofs; discharge **T8** and **T1**~~ — **DONE** 2026-07-09:
+   `.github/workflows/lean.yml` compiles T1/T2/T3/T6/T8 + D1.2 uniqueness-of-sorts
+   on GitHub Actions (Lean 4.31.0, zero `sorry`). **Remaining Phase 2:** **C1**
+   (minimality) research conjecture; T4/T5/T7 (Go-tested, Lean-mechanizable
+   later); extend T1 over the `Count`/`Window` productions.
 2. ~~Add the **I5 erasure test**~~ — **DONE** 2026-07-09
    (`TestI5PresentationErasure{Pure,Corpus}`); the invariant scorecard now has
    no untested invariant.

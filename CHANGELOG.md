@@ -2,6 +2,22 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-09 — T1 (decidability + termination) discharged in Lean (CI-compiled)
+
+- **Milestone: D1.5 §T1 proved for the mechanized `Expr` fragment.** New
+  `mechanization/Governance/Algebra/Typing.lean`:
+  - `infer` — a **total** structural sort-inference function over `Expr`;
+  - `typing_decidable : Decidable (∃ t, HasType Γ e t)` — the typing leg of T1
+    (static analyzability is decidable);
+  - `typing_unique` — the D1.2 **Uniqueness of Sorts** metatheorem.
+  - `Semantics.lean` adds `eval_terminates : ∃ v, eval ρ e = v` — the termination
+    leg (evaluation is total; the sub-Turing algebra never diverges).
+- **CI-verified:** GitHub Actions `lean.yml` green on Lean 4.31.0 (build + zero
+  `sorry`). Now CI-compiled: **T1, T2, T3, T6, T8** + uniqueness-of-sorts.
+- `spec/D1.5` T1 → **proved (scoped)**; PROGRESS Phase 2 / 8.3, README updated.
+  Scope: the mechanized `Expr` (9 core productions; `Count`/`Window` extension
+  and C1 minimality remain).
+
 ## 2026-07-09 — Continuous-ingestion control plane (8.4)
 
 - **Milestone: one-shot ingestion → a repeatable, idempotent, ledgered pipeline.**

@@ -1,3 +1,5 @@
+import Governance.Algebra.AST
+
 /-!
 # Governance.Algebra.Semantics
 
@@ -9,8 +11,6 @@ evaluation: it consumes an environment and produces a `Value`, and there is no
 way for it to yield a modified `Env`. The `eval_is_pure` theorem below makes this
 "no write-effect" property explicit against an instrumented evaluator.
 -/
-
-import Governance.Algebra.AST
 
 namespace Governance
 namespace Algebra

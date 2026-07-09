@@ -1,6 +1,6 @@
 # PROGRESS REPORT — gks-core vs. the D0 Maturity Roadmap
 
-**Date:** 2026-07-09 UTC · **Author:** Kiro (Engineering)
+**Date:** 2026-07-09 UTC (current through tag `v0.4.5`) · **Author:** Kiro (Engineering)
 **Baselines:** `spec/D0v5.md` (D0 v1.1, FROZEN), `spec/D1.1–D1.5`,
 `handoff.md`/`handoff2.md`/`handoff3.md`, `CHANGELOG.md`.
 **Verification basis:** `go build/vet/test ./...` green; live dev DB (Postgres 18,
@@ -23,9 +23,9 @@ multi-domain Registry Law all pass.
 | Phase | Definition | Status | Evidence / gap |
 | --- | --- | --- | --- |
 | **0 — Kernel Discovery** | Establish ⟨B, T⟩ and the constitution | ✅ **Complete** | D0 v1.1 frozen; `spec/D1.1–D1.5`. |
-| **1 — Kernel Validation** | Empirical stress-testing; independent multi-compiler verification | 🟡 **Partial** | Two benchmarks (§121, ISO 8.7) + KPI + a 400+-instance labour corpus ingested; real inter-compiler κ=0.7877 (`cmd/interop`); falsification campaign started (`cmd/falsify`). **Gap:** no *organizationally independent* second compiler; corpus breadth still narrow. |
+| **1 — Kernel Validation** | Empirical stress-testing; independent multi-compiler verification | 🟡 **Partial** | Two benchmarks (§121, ISO 8.7) + KPI + a 400+-instance labour corpus across **4 domains**; real inter-compiler κ=0.7877 (`cmd/interop`) and a fresh-vs-fresh κ=0.8380 (`cmd/trackd`); falsification campaign (`cmd/falsify`) + whole-store screen clean (410 rows); Registry Law Θ(1) verified across domains. **Gap:** no *organizationally independent* second compiler; single implementation. |
 | **2 — Mechanized Semantics** | Machine-checked invariant proofs | 🟡 **Partial** | T2 (I1), T3 (I8), T6 (I2) proved mathlib-free in `mechanization/`. **Gap:** proofs **not CI-compiled** (Lean toolchain unreachable in this env); T8 (I7) `sorry`; T1 (decidability), C1 (minimality) open. |
-| **3 — Industrial Compiler** | Production-scale passes enforcing invariants by construction | 🟢 **Substantial** | Go + PostgreSQL: bitemporal K̂ store, pure Ŝ evaluator + defeasible resolver, persisted Ê (replay → verdicts), CNF export + Ed25519 seal, temporal-read CLI, registry snapshots, exact-rational VAL. WP-1…WP-8 landed. **Gap:** extraction depth (Track D); scale beyond dev corpus. |
+| **3 — Industrial Compiler** | Production-scale passes enforcing invariants by construction | 🟢 **Substantial** | Go + PostgreSQL: bitemporal K̂ store, pure Ŝ evaluator + defeasible resolver, persisted Ê (replay → verdicts), CNF export + Ed25519 seal, temporal-read CLI, registry snapshots, exact-rational VAL. WP-1…WP-8 landed. **Gap:** Track D showed extraction is already clause-atomic; remaining gaps are *scale* beyond the dev corpus and *automated/continuous* ingestion. |
 
 ---
 
@@ -34,7 +34,7 @@ multi-domain Registry Law all pass.
 | Dimension | Status | Detail |
 | --- | --- | --- |
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
-| **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. |
+| **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. **Track D datapoint:** two *fresh* independent classifiers agree at κ=0.8380 (`cmd/trackd`), isolating the Track B gap to the older stored assignments rather than textual ambiguity. |
 | **8.3 Formal Mechanization** | 🟡 **Partial** | I1/I8/I2 proofs written (Lean, mathlib-free); **compilation pending** a Lean toolchain in CI; T8 (I7) still `sorry`. I5 and I7's operational content are **mechanically tested in Go** (not Lean-*proved*): presentation-erasure over 392 instances, acyclic reflection graph + store-wide sub-Turing screen (410 instances). Distinction: *tested* ≠ *machine-proved*. |
 | **8.4 Continuous Ingestion** | 🟡 **Partial** | Store spans **4 real normative domains** (VN labour statute, ISO 9001, US tax §121, KPI/policy). `TestRegistryLawBoundedBasisAcrossDomains` proves the basis stays = B (6 constructors, Θ(1)) across all domains — no domain adds a constructor. **Track D (2026-07-09):** corpus is already clause-atomic (`cmd/trackd`, segmentation ×1.00). **Gap:** ingestion is not yet *continuous*/automated (one-shot per corpus); residual classifier disagreement is semantic (cue modelling). |
 
@@ -68,7 +68,8 @@ All ten falsification criteria remain **un-triggered**:
   (adversarial inputs were halted, not accommodated — Track C);
 - published CNF runs reproduce byte-identically;
 - validation floors (κ≥0.70, VA≥0.90) currently hold on the tested corpora;
-- Registry Law held (Θ(1) basis) on the ingested domain.
+- Registry Law held (Θ(1) basis) across **4 domains**, and the whole store
+  (410 rows) screens falsification-clean.
 
 **Confirmation (D0 §9.2) is NOT yet earned:** it requires independent
 compilation convergence at the verdict stratum and evidence that no smaller
@@ -110,4 +111,5 @@ minimality C1 is an open conjecture). Status is correctly *provisional*.
 4. **Continuous ingestion** — multi-domain Registry Law now **tested**
    (`TestRegistryLawBoundedBasisAcrossDomains`, 4 real domains, basis = B). Still
    open: *automated/continuous* ingestion (currently one-shot per corpus).
-5. Escalate the three Agent-0 decisions for a ruling.
+5. Agent-0 decisions **filed** in `AGENT-0-DECISIONS.md`; awaiting a ruling —
+   engineering holds the provisional behavior until then.

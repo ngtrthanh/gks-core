@@ -41,7 +41,8 @@ abbrev Ctx := String → Option Ty
 Total structural sort inference — the functional form of the D1.2 judgment
 `Γ ⊢ e : τ`. A term is well-typed iff `infer` returns `some τ`. Every case is a
 finite structural read; there is no recursion that is not on a strict subterm,
-so `infer` is total (the equation compiler accepts it without a `sorry`).
+so `infer` is total (accepted by the equation compiler as a complete, gap-free
+definition — no unproven obligation).
 -/
 def infer (Γ : Ctx) : Expr → Option Ty
   | .lit v        => some v.ty

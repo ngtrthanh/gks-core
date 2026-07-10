@@ -47,7 +47,7 @@ see the mechanization-scope correction below.
 | --- | --- | --- |
 | **8.1 Reproducibility** | 🟢 **Met** | CNF export byte-identical across runs (same digest, I8); α-renamed content-ordered ids; corpus-derived coordinates (no `time.Now()` in ingest). |
 | **8.2 Independent Validation** | 🟡 **Partial** | Harness computes real Fleiss' κ and verdict-agreement with asserted floors (κ≥0.70, VA≥0.90). Live-corpus κ=**0.7877** (392 loci). **Caveat:** single team maintains both classifiers — measures rule-robustness, not true independence. Verdict-agreement over a *second verdict engine* not yet exercised. **Track D datapoint:** two *fresh* independent classifiers agree at κ=0.8380 (`cmd/trackd`), isolating the Track B gap to the older stored assignments rather than textual ambiguity. |
-| **8.3 Formal Mechanization** | 🟡 **Partial (models, not the stated theorems)** | The Lean development CI-compiles (zero `sorry`) but proves *simplified models*, not the D1.5 relational obligations (F1): T2/T5 definitional (`rfl`), T3/T6/T7/T8 model-lemmas over unformalized `Step`/`Schema`, only T1 a genuine scoped theorem. Real mechanization (formalize `Step`; prove T3/T6/T7/T8 as stated; type-soundness) is Phase-2 research. |
+| **8.3 Formal Mechanization** | 🟡 **Partial (models, improving)** | CI-compiles (zero `sorry`). T2/T5 definitional (`rfl`); **T3/T6/T7 now proved over a Lean model of the D1.4 `Step` system** (`Governance.Kernel.Transition`, `Config=⟨K̂,θ⟩`) — real case-analysis theorems, but a model, not the Go impl; T8 a `Nat` fact (`Schema@level` still unimplemented); T1 a scoped `Expr` theorem. Remaining: correspondence to the Go resolver (tie-break), formalize `Schema`/T8, type-soundness. |
 | **8.4 Continuous Ingestion** | 🟢 **Substantial** | Store spans **4 real normative domains**; `TestRegistryLawBoundedBasisAcrossDomains` proves basis = B (Θ(1)) across all. **Continuous control plane** (`cmd/ingest_run` + `ingestion_run` ledger, migration 0006): manifest-driven, **digest-idempotent**, ledgered — a re-run over an unchanged corpus is a safe no-op (UP-TO-DATE→skip; verified 0-delta with Registry Law HELD). Idempotency is enforced in the control plane because `kernel_instance`'s EXCLUDE constraint rejects overlapping re-inserts. **Track D:** corpus already clause-atomic. **Gap:** scheduling is external (cron/CI); one unsupervised corpus so far. |
 
 ---
@@ -57,22 +57,23 @@ see the mechanization-scope correction below.
 | # | Invariant | Enforcement | Status |
 | --- | --- | --- | --- |
 | I1 | Read-only algebra | `Environment` copy-on-bind; no DB handle in `Eval`; AST has no write op | 🟢 by construction (Go). Lean T2 is definitional (`rfl`) — non-evidentiary |
-| I2 | Single writer / append-only | DB trigger + RBAC (`e_writer`); invariant tests reject UPDATE/DELETE | 🟢 enforced + tested (DB/Go). Lean T6 is a `List Nat` model-lemma — not evidence. θ-guard now **privilege-enforced** (migration 0007: e_writer UPDATE revoked; `transition_apply` SECURITY DEFINER) |
+| I2 | Single writer / append-only | DB trigger + RBAC (`e_writer`); invariant tests reject UPDATE/DELETE | 🟢 enforced + tested (DB/Go). Lean T6 (`step_monotone`) proved over the D1.4 **Step model** (`Config=⟨K̂,θ⟩`). θ-guard now **privilege-enforced** (migration 0007: e_writer UPDATE revoked; `transition_apply` SECURITY DEFINER) |
 | I3 | Kernel closure | 6-constructor enum; `FALSIFICATION-CANDIDATE` screen halts extensions; whole store screened clean (410 rows) | 🟢 held (Track C + store-wide) |
 | I4 | Registry inertness | pure rename-stability test (`internal/registry`, Go) | 🟢 tested (Go). Lean T4 is a genuine induction but over the `Expr` model, not the K̂-level `verdict` statement |
 | I5 | Presentation erasure | verdict identifier = `CanonicalHash(ast)` only; erasure + adversarial-mutation test over 392 stored instances (Go) | 🟢 tested (Go). Lean T5 is definitional (`rfl`) — non-evidentiary |
-| I6 | Bitemporal totality | `tix_explicit_lower` CHECK; verdicts carry coordinates; temporal-read CLI | 🟢 enforced (DB). Lean T7 is a list model-lemma. ⚠ registry is versioned, **not bitemporal** (M10) |
+| I6 | Bitemporal totality | `tix_explicit_lower` CHECK; verdicts carry coordinates; temporal-read CLI | 🟢 enforced (DB). Lean T7 (`step_tix_preserved`) proved over the Step model. ⚠ registry is versioned, **not bitemporal** (M10) |
 | I7 | Stratified reflection | REF-graph acyclicity test + op-name screen | 🔴 **vacuous** — `Schema@level` reflection is **not implemented** anywhere; REF-acyclicity ≠ stratification; Lean T8 is a `Nat` library fact with no `Schema` (F1/finding-7) |
-| I8 | Pass determinism | byte-stable CNF (reviewer-reproduced); resolver tie-break; no float64 | 🟢 held within a store (Go). ⚠ tie-break on store-UUID diverges across independent stores (M6). Lean T3 is a model-lemma |
+| I8 | Pass determinism | byte-stable CNF (reviewer-reproduced); resolver tie-break; no float64 | 🟢 held within a store (Go). ⚠ tie-break on store-UUID diverges across independent stores (M6 — now content-key). Lean T3 (`step_deterministic`) proved over the Step model (nondeterminism-free) |
 | I9 | Source anchoring | UNIQUE(source_map.instance_pk) + totality (410/410 mapped) + tests | 🟢 total single-valued map. NOTE: D0 calls it a *bijection* but it is many-to-one (4 instances→1 locus in D8 Run 2); spec to be corrected |
 
 **Weakest links (corrected per the exit review).** DB-enforced + Go-tested invariants
 (I2, I3, I6, I9 at the `kernel_instance` level; I8 within a store; I1 by construction)
-are real. The **Lean "proofs" add no evidential weight** (F1): T2/T5 definitional,
-T3/T6/T7/T8 lemmas over unformalized structures. **I7 is vacuous** (constrains an
-unimplemented feature). Open items: real `Step`/`Schema` mechanization; independent
-verification (D0 §10.2); and the *research conjecture* C1 (minimality, not yet
-well-posed) — not an invariant gap.
+are real. The Lean layer is **improving but still a model**: T2/T5 definitional;
+**T3/T6/T7 proved over a Lean model of the D1.4 `Step` system** (real theorems, but
+not the Go impl); T8 a `Nat` fact; **I7 vacuous** (its `Schema@level` feature is
+unimplemented). Open items: correspondence of the `Step` model to the Go resolver;
+formalize `Schema`/T8; independent verification (D0 §10.2); and the *research
+conjecture* C1 (minimality, not yet well-posed) — not an invariant gap.
 
 ---
 
@@ -118,9 +119,9 @@ open work is truthfulness, reconciliation, real bugs, and the real science.
 | **B** | Withdraw self-acceptance; log Hyp-1 falsification | F2, F3 | ✅ done — acceptance withdrawn (this doc); Hyp-1 partial falsification logged (§4) |
 | **C** | D0 amendment protocol + D0 v1.2 | F3, M4, M5 | ✅ done — `spec/D0-AMENDMENTS.md` (protocol + A01–A05; FD-1/FD-2 falsification log) |
 | **D** | Confirmed code bugs | M7 cycle, θ-bypass (min-8), M6 tie-break, M2 benchmark, unbound-var (min-12) | ✅ done — M7 fixed+test, M6 fixed, θ-bypass fixed (migration 0007), M2+min-12 documented |
-| **E** | Spec single-source-of-truth | M1, M3, M10 | ✅ done — D1.3 §2 grammar rewritten **1:1 to the AST** (13 ops; I7 marked unimplemented); D1.4 §2 big-step, S-Violate (obligation-only), §4 verdict (A04 contract), determinism reconciled; θ-bypass fixed (0007). Residual: formal rules for discharged/suspension-lift/conditional (documented D1.4 §6); registry bitemporality = future impl |
+| **E** | Spec single-source-of-truth | M1, M3, M10 | ✅ done — D1.3 §2 grammar 1:1 to the AST (I7 unimplemented); D1.4 §2/§3/§4 reconciled incl. new S-Discharge/S-Lift/V-Conditional rules (§3.5–3.7); θ-bypass fixed (0007). Residual: S-Lift not yet implemented; registry bitemporality = future impl |
 | **F** | Scholarly apparatus + hygiene | LICENSE/CITATION, ISO-PDF, dupes, M9 phantom paths, related work | ✅ done — LICENSE+CITATION, PDF/dupes removed, drift fixed, `RELATED-WORK.md` added |
-| **G** | Real confirmation science (needs external parties) | F4, C1, formalize `Step` | ⏳ scaffold/spec only |
+| **G** | Real confirmation science (needs external parties) | F4, C1, formalize `Step` | ◑ started — D1.4 `Step` **formalized** in Lean (`Transition.lean`); T3/T6/T7 proved over it (`step_deterministic/monotone/tix_preserved`). Remaining (needs external parties/research): Go↔model correspondence, `Schema`/T8, C1 well-posedness + VAL-elimination, independent 2nd implementation, human gold corpus |
 
 ## 6. What acceptance actually requires (D0 §10.2 / §9.2.3)
 

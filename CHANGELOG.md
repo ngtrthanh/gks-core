@@ -2,6 +2,23 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-11 — WS-G: D1.4 `Step` formalized in Lean; T3/T6/T7 proved over it. WS-E residual.
+
+- **`mechanization/Governance/Kernel/Transition.lean` (new, CI-green).** Models the
+  D1.4 §3 transition system — `Config = ⟨K̂, θ⟩` with a 6-state lifecycle and an
+  append-only, nondeterminism-free `step` function — and proves, as real
+  case-analysis theorems over it: `step_monotone` (**T6/I2**, K̂ append-only),
+  `step_tix_preserved` (**T7/I6**, index-totality), `step_deterministic` (**T3/I8**,
+  the transition is a total function). D1.5 T3/T6/T7 upgraded from *model-lemma /
+  definitional* to **proved (Step model)**; the scope note and PROGRESS §3/§8.3
+  updated. Honest boundary: this is a *model* of `Step`, not the Go implementation
+  (the resolver's tie-break correspondence remains open), and T8's `Schema@level`
+  is still unimplemented.
+- **WS-E residual.** D1.4 gains the previously-missing rules as formal inference
+  rules: **S-Discharge** (§3.5, modelled), **S-Lift** (§3.6, specified but flagged
+  *not yet implemented*), **V-Conditional** (§3.7, open-texture → conditional verdict).
+- Lean CI green (run passed, zero `sorry`); `make spec` OK.
+
 ## 2026-07-10 — WS-E deep rewrite: D1.3/D1.4 reconciled 1:1 with the implementation
 
 - **D1.3 §2 grammar rewritten to match `kernel.Expr` exactly** — the 13 authoritative

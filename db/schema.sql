@@ -241,7 +241,8 @@ CREATE TRIGGER trg_transition_log_append_only
 -- machine's current state) and applies the new state. Direct UPDATE/DELETE
 -- of e_machine is denied below.
 CREATE OR REPLACE FUNCTION transition_apply()
-RETURNS trigger LANGUAGE plpgsql AS $$
+RETURNS trigger LANGUAGE plpgsql
+  SECURITY DEFINER SET search_path = public, pg_temp AS $$
 DECLARE
   cur e_state;
 BEGIN
@@ -290,7 +291,10 @@ CREATE TRIGGER trg_e_machine_guard
 -- RBAC: the Ê writer appends events/transitions/verdicts and creates machines;
 -- θ updates happen only through the transition trigger.
 GRANT SELECT, INSERT ON world_event, transition_log, verdict TO e_writer;
-GRANT SELECT, INSERT, UPDATE ON e_machine TO e_writer;
+-- e_writer may create machines (INSERT) and read them, but MUST NOT update θ
+-- directly: state changes only through transition_log -> transition_apply()
+-- (SECURITY DEFINER). Minor-8 fix: privilege-enforced, not via a forgeable GUC.
+GRANT SELECT, INSERT ON e_machine TO e_writer;
 
 -- ---- Continuous-ingestion ledger (migration 0006) --------------------------
 -- Append-only record of ingestion runs; idempotency is by source_digest.

@@ -1,8 +1,9 @@
 # Makefile — Governance Computing Formal Repository
 # Phase 1: The Formal Transition
 #
-# Recipes are placeholders for the PL/formal-methods toolchain. Real backends
-# (KaTeX renderer, Lean 4, reference compiler) are wired in as they land.
+# Targets wrap the real toolchain: `verify` runs the Lean 4 mechanization
+# (mathlib-free) via lake; `validate`/`ingest` run the Go harnesses against the
+# live DB. See CI (`.github/workflows/lean.yml`) for the authoritative Lean build.
 
 SPEC_DIR      := spec
 MECH_DIR      := mechanization
@@ -18,13 +19,14 @@ help: ## Show available targets
 	@echo "Governance Computing — formal repository"
 	@echo "Targets:"
 	@echo "  make spec           Validate/render the D1 specification documents"
-	@echo "  make verify         Run Lean 4 mechanization (placeholder)"
+	@echo "  make verify         Run the Lean 4 mechanization (lake build; models, see spec/D1.5)"
 	@echo "  make test-compiler  Run the reference-compiler (Go) test suite"
 	@echo "  make replay-d8      Replay the D8 benchmark traces through the persisted E-layer"
 	@echo "  make cnf-export     Dump the store in Canonical Normal Form to $(EXPORT_DIR)/dump.cnf"
 	@echo "  make seal           Ed25519-sign the CNF export ($(EXPORT_DIR)/dump.cnf.sig)"
 	@echo "  make verify-seal    Verify the CNF export seal (AUTHENTIC/TAMPERED)"
-	@echo "  make validate       Run reproducibility + agreement harnesses (placeholder)"
+	@echo "  make validate       Run the agreement harness on fixtures (first-party; see PROGRESS 8.2)"
+	@echo "  make ingest         Continuous-ingestion control plane (dry-run)"
 	@echo "  make clean          Remove build artifacts"
 
 spec: ## Validate and render the specification documents
@@ -38,8 +40,9 @@ verify: ## Run the Lean 4 mechanization over the proof obligations (D1.5)
 	  cd $(MECH_DIR) && lake build; \
 	else \
 	  echo "[verify] Lean toolchain (lake) not found on PATH."; \
-	  echo "[verify] Proofs present in $(MECH_DIR)/: T2 (I1 purity), T3 (I8 determinism),"; \
-	  echo "[verify]   T6 (I2 append-only) are discharged; T8 (I7), T1, C1 remain 'sorry'."; \
+	  echo "[verify] The mechanization CI-compiles (Lean 4.31.0, zero sorry) but proves"; \
+	  echo "[verify]   SIMPLIFIED MODELS, not the D1.5 theorems as stated — see spec/D1.5"; \
+	  echo "[verify]   (T2/T5 definitional; T3/T6/T7/T8 model-lemmas; T1 scoped)."; \
 	  echo "[verify] Install elan+Lean, then 'make verify' compiles them (lake build)."; \
 	fi
 

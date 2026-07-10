@@ -13,3 +13,9 @@
 /validation/interop/*.cnf
 /compiler/trackd
 /compiler/ingest_run
+
+# Copyrighted source corpora — do not redistribute (use structure-preserving paraphrase per D8)
+*.PDF
+*.pdf
+# Binary doc duplicates (canonical form is the .md)
+Computable Governance.docx

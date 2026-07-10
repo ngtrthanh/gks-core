@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software or specification, please cite it as below."
+title: "gks-core: a reference realization of the Governance Computing kernel ⟨B, T⟩"
+abstract: >-
+  A reproducible, deterministic reference implementation and machine-checkable
+  specification for a governance-computing kernel: six constructors, a sub-Turing
+  term algebra T, a bitemporal append-only knowledge store, a defeasible resolver,
+  and a mathlib-free Lean scaffold. Status: Phase-1 preparation (not accepted);
+  see PHASE1-EXIT-REVIEW.md and PROGRESS.md for the honest evidence boundary.
+type: software
+authors:
+  - name: "The gks-core authors"
+repository-code: "https://github.com/ngtrthanh/gks-core"
+license: MIT
+keywords:
+  - computational governance
+  - defeasible deontic logic
+  - bitemporal
+  - Lean
+  - reproducibility
+version: "0.9.x (post-review; v1.0.0 acceptance withdrawn)"
+date-released: "2026-07-10"

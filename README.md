@@ -26,7 +26,7 @@ invariants (see the corrected `spec/D1.5` ledger). Remediation is tracked in
 | `mechanization/` | Lean 4 (mathlib-free) scaffold for the D1.5 obligations. | CI-compiles (Lean 4.31.0, zero `sorry`) but proves **simplified models, not the stated theorems** (F1): T2/T5 definitional, T3/T6/T7/T8 model-lemmas over unformalized `Step`/`Schema`, only T1 a scoped theorem. See corrected `spec/D1.5`. |
 | — | Ê execution layer: bitemporal event replay → persisted verdicts. | Working (`db/migrations/0004`, `compiler/internal/machine`, `cmd/replay_d8`) |
 | `validation/` | Reproducibility and inter-compiler agreement harnesses (Fleiss' $\kappa$, verdict agreement). | Implemented (`make validate`) |
-| `deliver/`, `D8.md` | Benchmark fixture narratives (D8 Runs) with expected outcomes. | Reference |
+| `D8.md` | Benchmark fixture narratives (D8 Runs) with expected outcomes. | Reference |
 | `data/` | Source corpora for ingestion (e.g. Vietnamese consolidated statute .docx). | Reference |
 | `export/` | CNF dumps + Ed25519 seal material. **Gitignored — never committed.** | Generated |
 

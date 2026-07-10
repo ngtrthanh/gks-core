@@ -2,6 +2,25 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-10 — Exit-review remediation: WS-C (constitution), WS-D (bugs), WS-F (hygiene)
+
+- **WS-C (F3/M4/M5) — amendment protocol + D0 v1.2.** New `spec/D0-AMENDMENTS.md`:
+  a protocol for revising the frozen D0 (with mandatory falsification-linkage), and
+  the ratified v1.2 set — A01 basis 7→6 (with **FD-1** Hypothesis-1 falsification
+  linkage), A02 Force deprecation (**FD-2**), A03 Ê alphabet corrected (M4), A04
+  verdict vocabulary + defaults specified (M5, the verdict contract), A05 I9 as a
+  total map not a bijection. D0 v1.1 is preserved verbatim as the frozen baseline.
+- **WS-D — confirmed code bugs.** M7: `impact()` now terminates on cyclic REF graphs
+  (SQL `CYCLE` clause + regression test). M6: equal-priority guard tie-break moved
+  from store-UUID to a content key (`cnf.CanonicalHash`) for cross-store determinism.
+  M2: D8 Run-1's guard-vs-guard narrative vs the guard-vs-norm executable is now
+  documented. Minor-12: the unbound-variable→false default is documented as a known
+  limitation. (θ-bypass, Minor-8, is flagged but needs an RBAC refactor — WS-E.)
+- **WS-F — apparatus + hygiene.** LICENSE (MIT) + CITATION.cff; removed the
+  copyrighted ISO 9001 PDF and binary dupes; fixed Makefile/README drift. The review
+  trail (`PHASE1-EXIT-REVIEW.md`, `FR.md`) is now committed in-tree (M9).
+- `go build/vet/test ./...` green; Lean CI unaffected.
+
 ## 2026-07-10 — External Phase-1 exit review (REVISE): claims corrected, acceptance withdrawn
 
 Response to `PHASE1-EXIT-REVIEW.md` (external reviewer, verdict **REVISE**). No code

@@ -159,6 +159,13 @@ func Eval(e *kernel.Expr, env Environment) (Value, error) {
 		if v, ok := env.Vars[e.Name]; ok {
 			return v, nil
 		}
+		// KNOWN LIMITATION (exit-review Minor-12): an unbound variable evaluates
+		// to false rather than raising. Combined with the absence of an
+		// ingest-time type-checker (the DB validates only jsonb_typeof='object'),
+		// a malformed payload can yield a verdict instead of an error. This is a
+		// deliberate closed-world default for the tested corpora; hardening it
+		// (bind-checking on ingest, or a distinct "unbound" boundary) is tracked
+		// in PROGRESS WS-E. Documented here rather than silently relied upon.
 		return VBool(false), nil
 	case kernel.OpLookup:
 		if v, ok := env.Registry[e.Name]; ok {

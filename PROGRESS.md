@@ -116,10 +116,10 @@ open work is truthfulness, reconciliation, real bugs, and the real science.
 | --- | --- | --- | --- |
 | **A** | Retract/re-scope mechanization claims | F1 | ✅ done — D1.5 ledger + PROGRESS + README relabeled (definitional / model-lemma / scoped) |
 | **B** | Withdraw self-acceptance; log Hyp-1 falsification | F2, F3 | ✅ done — acceptance withdrawn (this doc); Hyp-1 partial falsification logged (§4) |
-| **C** | D0 amendment protocol + D0 v1.2 | F3, M4, M5 | ⏳ in progress |
-| **D** | Confirmed code bugs | M7 cycle, θ-bypass (min-8), M6 tie-break, M2 benchmark, unbound-var (min-12) | ⏳ in progress |
-| **E** | Spec single-source-of-truth | M1, M3, M10 | ⏳ planned |
-| **F** | Scholarly apparatus + hygiene | LICENSE/CITATION, ISO-PDF, dupes, M9 phantom paths, related work | ⏳ in progress |
+| **C** | D0 amendment protocol + D0 v1.2 | F3, M4, M5 | ✅ done — `spec/D0-AMENDMENTS.md` (protocol + A01–A05; FD-1/FD-2 falsification log) |
+| **D** | Confirmed code bugs | M7 cycle, θ-bypass (min-8), M6 tie-break, M2 benchmark, unbound-var (min-12) | ◑ mostly — M7 fixed+test, M6 fixed, M2+min-12 documented; **θ-bypass flagged, not yet code-fixed** (needs RBAC refactor, WS-E) |
+| **E** | Spec single-source-of-truth | M1, M3, M10 | ⏳ planned (est. ~1 eng-week) |
+| **F** | Scholarly apparatus + hygiene | LICENSE/CITATION, ISO-PDF, dupes, M9 phantom paths, related work | ◑ done except the related-work survey (⏳) |
 | **G** | Real confirmation science (needs external parties) | F4, C1, formalize `Step` | ⏳ scaffold/spec only |
 
 ## 6. What acceptance actually requires (D0 §10.2 / §9.2.3)

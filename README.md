@@ -6,12 +6,15 @@ reference compiler, and (planned) validation harnesses for the kernel $\langle B
 frozen in D0 v1.1 (Constitutional Specification).
 
 Phase 0 (kernel discovery, narrative) is closed. Phase 1 restated every normative claim
-in D0 as an axiom, grammar, inference rule, or proof obligation (`spec/`). As of
-**2026-07-10 the implementation program is constitutionally ACCEPTED** (Agent-0
-final verdict: *"Phase 1 is accepted; the remaining work is no longer
-implementation work — it is scientific confirmation"*). What remains is the
-**confirmation program** (D0 §9.2): independent replication and the C1 minimality
-question. See `AGENT-0-DECISIONS.md` and `PROGRESS.md`.
+in D0 as an axiom, grammar, inference rule, or proof obligation (`spec/`). An
+external Phase-1 exit review (`PHASE1-EXIT-REVIEW.md`, 2026-07-10) returned
+**REVISE**: the engineering artifact is real and reproducible, but the earlier
+"Phase 1 ACCEPTED" self-verdict overstated the evidence and **has been
+withdrawn**. The project is now at **Phase-1 preparation**; acceptance requires
+independent multi-compiler verification (D0 §10.2) that does not yet exist. The
+mechanization is honest scaffolding, not machine-checked proof of the D0
+invariants (see the corrected `spec/D1.5` ledger). Remediation is tracked in
+`PROGRESS.md` (WS-A…WS-G) and `AGENT-0-DECISIONS.md`.
 
 ## Repository Layout
 
@@ -20,7 +23,7 @@ question. See `AGENT-0-DECISIONS.md` and `PROGRESS.md`.
 | `spec/` | Formal mathematical specifications (D1 series): objects, type system, grammar, operational semantics, proof obligations. | Draft, complete |
 | `db/` | PostgreSQL bitemporal K̂ store: baseline `schema.sql` + numbered migrations. | Working |
 | `compiler/` | Go reference implementation: kernel domain model, sub-Turing T evaluator, defeasible resolver, CNF export, ingest/simulate/verify commands. | Working |
-| `mechanization/` | Lean 4 development (mathlib-free) for the D1.5 obligations. | **T1–T8 all proved** and **CI-compiled** (GitHub Actions, Lean 4.31.0, zero `sorry`); C1 open conjecture; `make verify` runs `lake build` locally |
+| `mechanization/` | Lean 4 (mathlib-free) scaffold for the D1.5 obligations. | CI-compiles (Lean 4.31.0, zero `sorry`) but proves **simplified models, not the stated theorems** (F1): T2/T5 definitional, T3/T6/T7/T8 model-lemmas over unformalized `Step`/`Schema`, only T1 a scoped theorem. See corrected `spec/D1.5`. |
 | — | Ê execution layer: bitemporal event replay → persisted verdicts. | Working (`db/migrations/0004`, `compiler/internal/machine`, `cmd/replay_d8`) |
 | `validation/` | Reproducibility and inter-compiler agreement harnesses (Fleiss' $\kappa$, verdict agreement). | Implemented (`make validate`) |
 | `deliver/`, `D8.md` | Benchmark fixture narratives (D8 Runs) with expected outcomes. | Reference |
@@ -90,11 +93,12 @@ with `psql` as superuser. The baseline `schema.sql` is kept in sync for fresh in
 ## Status
 
 `spec/` — DRAFT. `compiler/`, `db/` — working; the `handoff.md`/`handoff2.md` WP
-queue is fully landed. `mechanization/` — **T1–T8 (all eight theorem
-obligations)** plus the D1.2 uniqueness-of-sorts metatheorem proved with
-mathlib-free Lean proofs that **compile in CI** (`.github/workflows/lean.yml`,
-Lean 4.31.0, zero `sorry`); C1 (minimality) remains a research conjecture.
-`validation/` — implemented (`make validate`);
-`cmd/interop` computes real inter-compiler κ over the live corpus and
-`cmd/falsify` runs the falsification campaign. The remaining D1.5 obligation
-(C1) is a **conjecture**. See `CHANGELOG.md` for the change history.
+queue is fully landed. `mechanization/` — a mathlib-free Lean scaffold that
+**CI-compiles** (`.github/workflows/lean.yml`, Lean 4.31.0, zero `sorry`) but, per
+the exit review (F1), proves *simplified models* rather than the D1.5 statements as
+written: T2/T5 are definitional, T3/T6/T7/T8 are model-lemmas over the unformalized
+`Step`/`Schema` structures, and only T1 is a genuine (scoped) theorem. `validation/`
+— implemented (`make validate`), but the numbers are **first-party** (no human gold
+standard, no independent compiler — D0 §10.2 acceptance gate unmet). See
+`spec/D1.5`, `PROGRESS.md`, and `PHASE1-EXIT-REVIEW.md`. C1 (minimality) is an open,
+not-yet-well-posed conjecture. See `CHANGELOG.md` for history.

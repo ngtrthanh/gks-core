@@ -159,3 +159,31 @@ These are empirical/research obligations. The falsification campaign (D0 §9.1)
 stands permanently open; no criterion has triggered. Engineering does not "close"
 confirmation by writing more code — it is earned by independent replication and
 scientific result. Kernel status remains *provisional-but-accepted* until then.
+
+
+---
+
+## SUPERSEDED — external review withdrew the acceptance (2026-07-10)
+
+The "FINAL CONSTITUTIONAL VERDICT" above (internal self-acceptance of Phase 1) is
+**WITHDRAWN**. An external Phase-1 exit review (`PHASE1-EXIT-REVIEW.md`, verdict
+**REVISE**) found the acceptance scientifically invalid because it was issued by
+the same internal authority that authored the program, *without* D0 §10.2's
+independent multi-compiler verification — and it resolved that missing requirement
+by reclassifying it, i.e. by amending a document labelled PERMANENTLY FROZEN
+without any amendment protocol (finding F2). It further found that:
+
+- the "T1–T8 all proved" claim is materially overstated — the Lean proofs are over
+  simplified/definitional models, not the D1.5 statements as written (F1);
+- the frozen D0 basis is **seven** constructors, while the implementation is six —
+  so the program's own 7→6 (TIX) and Force reductions **partially falsify
+  Hypothesis 1**, a datum that must be logged, not absorbed as a "ruling" (F3);
+- the empirical validation is first-party and self-referential (F4).
+
+**Current status: Phase-1 *preparation*, not accepted.** The three engineering
+rulings of 2026-07-09 (TIX columnar / Force deprecated / `defeated` verdict) remain
+correctly implemented; what is withdrawn is the *acceptance verdict* and the
+overstated proof/validation claims. Acceptance now requires the real Phase-1 exit
+gate (independent verification) plus a proper D0 amendment protocol (see
+`PROGRESS.md` WS-B/WS-C). No frozen-text amendment is valid until that protocol
+exists.

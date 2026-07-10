@@ -2,6 +2,29 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-10 — External Phase-1 exit review (REVISE): claims corrected, acceptance withdrawn
+
+Response to `PHASE1-EXIT-REVIEW.md` (external reviewer, verdict **REVISE**). No code
+behavior changed in this entry — the *claims* are brought back in line with the
+evidence (work-streams WS-A/WS-B).
+
+- **WS-A (F1) — mechanization claims retracted/re-scoped.** `spec/D1.5` ledger
+  relabeled: T2/T5 → *definitional* (`rfl`, non-evidentiary); T3/T6/T7/T8 →
+  *model-lemma* over simplified structures (the D1.4 `Step` relation and D1.3
+  `Schema@level` are **not formalized**); T8 → a `Nat` library fact; T1 → *proved
+  (scoped)* over a 9-production `Expr` fragment with no `infer`↔`eval` soundness.
+  "T1–T8 all proved" / "every invariant machine-checked" removed from README,
+  PROGRESS, CHANGELOG. §8.3 downgraded 🟢→🟡; I7 marked **vacuous** (its
+  `Schema@level` feature is unimplemented).
+- **WS-B (F2, F3) — acceptance withdrawn; Hypothesis 1 partial falsification logged.**
+  The internal "Phase 1 ACCEPTED" verdict is withdrawn (`AGENT-0-DECISIONS.md`
+  superseded); status reinstated to **Phase-1 preparation** (D0 §10.2 independent
+  verification unmet). The program's own 7→6 (TIX) and Force reductions are logged
+  as a **partial falsification of D0 Hypothesis 1** (PROGRESS §4).
+- Fixed phantom baseline path (`spec/D0v5.md` → `Computable Governance.md`) and the
+  D1.5 "mathlib4" header (dev is mathlib-free). Remaining WS-C/D/E/F/G tracked in
+  PROGRESS §5.
+
 ## 2026-07-10 — Agent-0 FINAL CONSTITUTIONAL VERDICT: Phase 1 accepted
 
 - **Phase 1 (Kernel Validation) is ACCEPTED.** Agent-0's final verdict closes the

@@ -2,6 +2,23 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-10 — WS-E deep rewrite: D1.3/D1.4 reconciled 1:1 with the implementation
+
+- **D1.3 §2 grammar rewritten to match `kernel.Expr` exactly** — the 13 authoritative
+  node forms (`lit,var,not,and,or,cmp,arith,lookup,pred,count,window,ratio,boundary`).
+  Struck the unimplemented Allen `IntervalRel`; folded `PREV/ONCE/SINCE` into
+  `Window`'s `WinOp`; added the previously-missing `count`/`ratio`/`boundary`. §3
+  stratified reflection (`Schema@level`, I7) explicitly marked **NOT IMPLEMENTED**
+  (I7 vacuous).
+- **D1.4 §2 big-step semantics rewritten to match `evaluator.Eval`** op-by-op
+  (exact rational vs int ordering/arith, count as a bounded tally, boundary→
+  conditional). Lemma-1 purity note corrected to state the Lean proof is definitional
+  (F1). S-Violate is now obligation-only (Force removed, A02). §4 verdict tied to the
+  A04 verdict contract (vocabulary + defaults an independent impl must reproduce, M5).
+- Residual (documented, not yet formal inference rules): `discharged`/suspension-lift/
+  `conditional` transitions (D1.4 §6); registry bitemporality is future implementation.
+- Spec-only change; `go build/vet/test` unaffected.
+
 ## 2026-07-10 — WS-E: θ-bypass fixed + spec single-source-of-truth reconciliation
 
 - **θ-guard bypass closed (Minor-8, migration 0007).** `e_writer` loses direct

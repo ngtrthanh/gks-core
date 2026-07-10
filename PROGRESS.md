@@ -118,7 +118,7 @@ open work is truthfulness, reconciliation, real bugs, and the real science.
 | **B** | Withdraw self-acceptance; log Hyp-1 falsification | F2, F3 | ✅ done — acceptance withdrawn (this doc); Hyp-1 partial falsification logged (§4) |
 | **C** | D0 amendment protocol + D0 v1.2 | F3, M4, M5 | ✅ done — `spec/D0-AMENDMENTS.md` (protocol + A01–A05; FD-1/FD-2 falsification log) |
 | **D** | Confirmed code bugs | M7 cycle, θ-bypass (min-8), M6 tie-break, M2 benchmark, unbound-var (min-12) | ✅ done — M7 fixed+test, M6 fixed, θ-bypass fixed (migration 0007), M2+min-12 documented |
-| **E** | Spec single-source-of-truth | M1, M3, M10 | ◑ substantial — reconciliation notes added to D1.3 (authoritative AST; Minor-11 checker) & D1.4 (Force/ties/predicates/missing-rules/registry M10); full D1.3/D1.4 rewrite-to-AST still pending |
+| **E** | Spec single-source-of-truth | M1, M3, M10 | ✅ done — D1.3 §2 grammar rewritten **1:1 to the AST** (13 ops; I7 marked unimplemented); D1.4 §2 big-step, S-Violate (obligation-only), §4 verdict (A04 contract), determinism reconciled; θ-bypass fixed (0007). Residual: formal rules for discharged/suspension-lift/conditional (documented D1.4 §6); registry bitemporality = future impl |
 | **F** | Scholarly apparatus + hygiene | LICENSE/CITATION, ISO-PDF, dupes, M9 phantom paths, related work | ✅ done — LICENSE+CITATION, PDF/dupes removed, drift fixed, `RELATED-WORK.md` added |
 | **G** | Real confirmation science (needs external parties) | F4, C1, formalize `Step` | ⏳ scaffold/spec only |
 

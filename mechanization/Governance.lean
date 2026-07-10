@@ -10,3 +10,4 @@ import Governance.Algebra.Semantics
 import Governance.Algebra.Typing
 import Governance.Algebra.Stability
 import Governance.Kernel.Invariants
+import Governance.Kernel.Transition

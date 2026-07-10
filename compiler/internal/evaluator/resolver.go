@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 
+	"computable-governance/compiler/internal/cnf"
 	"computable-governance/compiler/internal/kernel"
 )
 
@@ -41,19 +42,38 @@ func contains(xs []string, s string) bool {
 	return false
 }
 
+// condKey is a store-independent tie-break key: the canonical hash of the guard's
+// condition (empty when the guard is unconditional). Semantically identical
+// guards hash identically across independent stores, so equal-priority ordering
+// no longer depends on random store UUIDs (exit-review M6).
+func condKey(g Guard) string {
+	if g.Condition == nil {
+		return ""
+	}
+	return cnf.CanonicalHash(g.Condition)
+}
+
 // Resolve applies defeasible priority resolution (D1.4 §3.2). Guards are
 // considered highest-priority first; the first guard whose condition holds and
 // that references the norm decides the verdict. A higher-priority `defeats`
 // therefore disables the norm even if a lower-priority guard would activate it.
 //
-// I8 (determinism): equal priorities are tie-broken by guard ID, never by
-// input order — the verdict must not depend on DB row order or map iteration.
+// I8 (determinism) + cross-store convergence (exit-review M6): equal priorities
+// are tie-broken by a CONTENT key — the canonical hash of the guard's condition,
+// not the store-assigned UUID. Two independent implementations ingesting the same
+// corpus therefore order equal-priority guards identically (the store UUID is only
+// a last resort for genuine content-duplicates, and cannot be relied on across
+// stores; content-addressing the norm references is tracked as the WS-E verdict
+// contract). Ordering never depends on DB row order or map iteration.
 func Resolve(normID string, guards []Guard, env Environment) (Resolution, error) {
 	ordered := make([]Guard, len(guards))
 	copy(ordered, guards)
 	sort.Slice(ordered, func(i, j int) bool {
 		if ordered[i].Priority != ordered[j].Priority {
 			return ordered[i].Priority > ordered[j].Priority
+		}
+		if ci, cj := condKey(ordered[i]), condKey(ordered[j]); ci != cj {
+			return ci < cj
 		}
 		return ordered[i].ID < ordered[j].ID
 	})

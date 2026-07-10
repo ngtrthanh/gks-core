@@ -2,6 +2,29 @@
 
 All notable changes to gks-core. Dates are UTC.
 
+## 2026-07-10 — WS-E: θ-bypass fixed + spec single-source-of-truth reconciliation
+
+- **θ-guard bypass closed (Minor-8, migration 0007).** `e_writer` loses direct
+  UPDATE on `e_machine`; `transition_apply()` is now SECURITY DEFINER, so the only
+  θ path is `INSERT transition_log` → trigger-as-owner. Verified on the live DB:
+  forged-GUC UPDATE → "permission denied"; legitimate `transition_log` INSERT still
+  applies state (rolled-back test); I2 invariant tests green.
+- **M1 — grammar single-source-of-truth.** D1.3 gains an authoritative-grammar note:
+  the implemented Go AST is canonical (`lit…count/window/ratio/boundary`); the EBNF's
+  `PREV/ONCE/SINCE`, Allen intervals, and `Schema@level` are unimplemented/future; the
+  Lean `Expr` is a 9-production sub-fragment. I7 (stratified reflection) is noted
+  **vacuous** (no `Schema@level` in any runnable component).
+- **Minor-11.** The D1.3 multiplication-boundedness "checker" claim corrected — no
+  such checker exists; bounded evaluation rests on the op-set screen + AST shape.
+- **M3 — D1.4 reconciled.** "Ties are impossible" corrected to the content-key
+  tie-break (M6); new §6 errata: S-Violate is obligation-only (Force removed, A02);
+  `performed/due/defeated/ρ_η` given operational definitions; `discharged`/
+  suspension-lift/`conditional` flagged as unwritten rules the machine already
+  produces.
+- **M10 — registry bitemporality.** Documented as a known limitation (registry is
+  version-keyed, not ⟨t_text,t_fact⟩; historical verdicts assume the current
+  version). Full D1.3/D1.4 rewrite-to-AST remains pending.
+
 ## 2026-07-10 — Exit-review remediation: WS-C (constitution), WS-D (bugs), WS-F (hygiene)
 
 - **WS-C (F3/M4/M5) — amendment protocol + D0 v1.2.** New `spec/D0-AMENDMENTS.md`:

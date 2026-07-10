@@ -57,7 +57,7 @@ see the mechanization-scope correction below.
 | # | Invariant | Enforcement | Status |
 | --- | --- | --- | --- |
 | I1 | Read-only algebra | `Environment` copy-on-bind; no DB handle in `Eval`; AST has no write op | 🟢 by construction (Go). Lean T2 is definitional (`rfl`) — non-evidentiary |
-| I2 | Single writer / append-only | DB trigger + RBAC (`e_writer`); invariant tests reject UPDATE/DELETE | 🟢 enforced + tested (DB/Go). Lean T6 is a `List Nat` model-lemma — not evidence. ⚠ θ-guard bypassable by `e_writer` via `gks.via_transition` (WS-D) |
+| I2 | Single writer / append-only | DB trigger + RBAC (`e_writer`); invariant tests reject UPDATE/DELETE | 🟢 enforced + tested (DB/Go). Lean T6 is a `List Nat` model-lemma — not evidence. θ-guard now **privilege-enforced** (migration 0007: e_writer UPDATE revoked; `transition_apply` SECURITY DEFINER) |
 | I3 | Kernel closure | 6-constructor enum; `FALSIFICATION-CANDIDATE` screen halts extensions; whole store screened clean (410 rows) | 🟢 held (Track C + store-wide) |
 | I4 | Registry inertness | pure rename-stability test (`internal/registry`, Go) | 🟢 tested (Go). Lean T4 is a genuine induction but over the `Expr` model, not the K̂-level `verdict` statement |
 | I5 | Presentation erasure | verdict identifier = `CanonicalHash(ast)` only; erasure + adversarial-mutation test over 392 stored instances (Go) | 🟢 tested (Go). Lean T5 is definitional (`rfl`) — non-evidentiary |
@@ -117,8 +117,8 @@ open work is truthfulness, reconciliation, real bugs, and the real science.
 | **A** | Retract/re-scope mechanization claims | F1 | ✅ done — D1.5 ledger + PROGRESS + README relabeled (definitional / model-lemma / scoped) |
 | **B** | Withdraw self-acceptance; log Hyp-1 falsification | F2, F3 | ✅ done — acceptance withdrawn (this doc); Hyp-1 partial falsification logged (§4) |
 | **C** | D0 amendment protocol + D0 v1.2 | F3, M4, M5 | ✅ done — `spec/D0-AMENDMENTS.md` (protocol + A01–A05; FD-1/FD-2 falsification log) |
-| **D** | Confirmed code bugs | M7 cycle, θ-bypass (min-8), M6 tie-break, M2 benchmark, unbound-var (min-12) | ◑ mostly — M7 fixed+test, M6 fixed, M2+min-12 documented; **θ-bypass flagged, not yet code-fixed** (needs RBAC refactor, WS-E) |
-| **E** | Spec single-source-of-truth | M1, M3, M10 | ⏳ planned (est. ~1 eng-week) |
+| **D** | Confirmed code bugs | M7 cycle, θ-bypass (min-8), M6 tie-break, M2 benchmark, unbound-var (min-12) | ✅ done — M7 fixed+test, M6 fixed, θ-bypass fixed (migration 0007), M2+min-12 documented |
+| **E** | Spec single-source-of-truth | M1, M3, M10 | ◑ substantial — reconciliation notes added to D1.3 (authoritative AST; Minor-11 checker) & D1.4 (Force/ties/predicates/missing-rules/registry M10); full D1.3/D1.4 rewrite-to-AST still pending |
 | **F** | Scholarly apparatus + hygiene | LICENSE/CITATION, ISO-PDF, dupes, M9 phantom paths, related work | ✅ done — LICENSE+CITATION, PDF/dupes removed, drift fixed, `RELATED-WORK.md` added |
 | **G** | Real confirmation science (needs external parties) | F4, C1, formalize `Step` | ⏳ scaffold/spec only |
 

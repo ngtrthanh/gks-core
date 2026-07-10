@@ -28,8 +28,13 @@ type Node struct {
 }
 
 // impactSQL walks REF edges backwards from the target: an instance is impacted
-// if it references the target, or references something impacted. UNION (not
-// UNION ALL) dedups the working set, so cyclic REF graphs terminate.
+// if it references the target, or references something impacted. The recursive
+// term carries a per-path `depth`, so a plain UNION does NOT dedup across cycles
+// (each revisit is a distinct (iri, depth) tuple and the CTE would not terminate).
+// The SQL:1999 CYCLE clause detects a repeated `iri` along the traversal `path`,
+// marks it `is_cycle` and stops expanding that branch — guaranteeing termination
+// on cyclic REF graphs. Cycle-closing rows are excluded from the result; every
+// reachable instance still gets its minimum acyclic depth.
 const impactSQL = `
 WITH RECURSIVE refs AS (
     SELECT payload->>'source'     AS source,
@@ -40,13 +45,13 @@ WITH RECURSIVE refs AS (
 ),
 closure(iri, depth) AS (
     SELECT $3::text, 0
-  UNION
+  UNION ALL
     SELECT r.source, c.depth + 1
     FROM refs r JOIN closure c ON r.target_iri = c.iri
-)
+) CYCLE iri SET is_cycle USING path
 SELECT iri, MIN(depth) AS depth
 FROM closure
-WHERE iri <> $3::text
+WHERE iri <> $3::text AND NOT is_cycle
 GROUP BY iri
 ORDER BY depth, iri`
 

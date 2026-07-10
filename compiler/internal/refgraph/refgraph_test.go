@@ -22,6 +22,9 @@ import (
 const (
 	idRefA = "efac0000-0000-4000-8000-0000000000a1"
 	idRefB = "efac0000-0000-4000-8000-0000000000b2"
+	// Cyclic fixture (M7 regression): CY1 -> CYT and CYT -> CY1.
+	idRefCy1 = "efac0000-0000-4000-8000-0000000000c1"
+	idRefCy2 = "efac0000-0000-4000-8000-0000000000c2"
 )
 
 func connString() string {
@@ -121,5 +124,32 @@ func TestImpactCoordinateSensitive(t *testing.T) {
 	}
 	if !(len(late) > len(early)) {
 		t.Fatalf("impacted set not coordinate-sensitive: early=%v late=%v", early, late)
+	}
+}
+
+// TestImpactTerminatesOnCycle is the M7 regression guard: a cyclic REF graph
+// (CY1 → CYT → CY1) must not hang the impact traversal. The 10s context deadline
+// turns a regression (non-terminating CTE) into a failed test rather than a hang.
+func TestImpactTerminatesOnCycle(t *testing.T) {
+	conn, err := pgx.Connect(context.Background(), connString())
+	if err != nil {
+		t.Skipf("database unreachable, skipping cycle test: %v", err)
+	}
+	defer conn.Close(context.Background())
+
+	e2000 := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+	seedREF(t, conn, idRefCy1, "urn:gkstest:CY1", "urn:gkstest:CYT", e2000)
+	seedREF(t, conn, idRefCy2, "urn:gkstest:CYT", "urn:gkstest:CY1", e2000)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	now := time.Now().UTC()
+
+	nodes, err := Impact(ctx, conn, "urn:gkstest:CYT", now, now)
+	if err != nil {
+		t.Fatalf("Impact did not terminate on a cyclic REF graph (M7): %v", err)
+	}
+	if !has(nodes, "urn:gkstest:CY1") {
+		t.Errorf("expected CY1 impacted on the cycle, got %v", nodes)
 	}
 }

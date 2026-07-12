@@ -13,7 +13,7 @@ EXPORT_DIR    := export
 SPEC_FILES    := $(wildcard $(SPEC_DIR)/D1.*.md)
 
 .DEFAULT_GOAL := help
-.PHONY: help spec verify test-compiler replay-d8 cnf-export seal verify-seal validate ingest ingest-apply clean
+.PHONY: help spec verify test-compiler replay-d8 cnf-export seal verify-seal validate ingest ingest-apply serve clean
 
 help: ## Show available targets
 	@echo "Governance Computing — formal repository"
@@ -27,6 +27,7 @@ help: ## Show available targets
 	@echo "  make verify-seal    Verify the CNF export seal (AUTHENTIC/TAMPERED)"
 	@echo "  make validate       Run the agreement harness on fixtures (first-party; see PROGRESS 8.2)"
 	@echo "  make ingest         Continuous-ingestion control plane (dry-run)"
+	@echo "  make serve          Read-only kernel console (web UI) on :8787"
 	@echo "  make clean          Remove build artifacts"
 
 spec: ## Validate and render the specification documents
@@ -76,6 +77,10 @@ ingest: ## Continuous-ingestion control plane: report NEW/CHANGED/UP-TO-DATE (dr
 
 ingest-apply: ## Ingest NEW/CHANGED corpora, skip UP-TO-DATE (idempotent), ledger each run
 	cd $(COMPILER_DIR) && go run ./cmd/ingest_run --apply
+
+serve: ## Serve the read-only kernel console (web UI) against the live store
+	@echo "[serve] kernel console -> http://localhost:8787 (read-only; tt/tf cursor)"
+	cd $(COMPILER_DIR) && go run ./cmd/serve
 
 clean: ## Remove build artifacts
 	@echo "[clean] nothing to remove (no build artifacts yet)"

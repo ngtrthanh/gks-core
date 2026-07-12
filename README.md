@@ -63,6 +63,7 @@ Commands (all Go, stdlib + pgx; run with the `db` service up):
 | `ingest_kpi` | Persist + evaluate D8 Run 6 VAL (exact-rational KPI vs referenced threshold) |
 | `cnf_export` | Deterministic α-renamed Canonical Normal Form dump (WP-5) |
 | `seal_export` / `verify_seal` | Detached Ed25519 signature over the CNF export |
+| `serve` | Read-only web console over the live store (`make serve`, port 8787) |
 
 All work packages in `handoff.md` / `handoff2.md` are now landed. Done: WP-1
 (RBAC + append-only), WP-2 (`source_map` population, I9), WP-3 (Ê persistence),
@@ -82,10 +83,23 @@ make seal verify-seal     # Ed25519 seal + verification
 make spec                 # sanity-check the D1 documents
 make verify               # Lean mechanization — lake build if Lean present, else status
 make validate             # inter-compiler agreement harness (κ≥0.70, VA≥0.90)
+make serve                # kernel console (web UI) -> http://localhost:8787
 ```
 
 Temporal reads accept `--at-text`/`--at-fact` (RFC3339; default now); the
 `impact <target_iri>` command traverses REF edges valid at those coordinates.
+
+### Kernel console (`cmd/serve`)
+
+`make serve` starts a strictly read-only HTTP console on `http://localhost:8787`
+(override with `-addr`; store DSN via `DATABASE_URL`/`PG*` env, same convention as
+the other commands). Every read goes through `kernel_instance_at(tt, tf)` at the
+coordinates set by the **temporal cursor** in the header — move it to re-read the
+entire kernel as of any $(t_{\text{text}}, t_{\text{fact}})$ pair. Views: the
+instance ledger (census by constructor, search, per-instance drawer with rendered
+T-AST formulas, bitemporal slices, and inbound REF designations), the verdict
+ledger (status + open-texture `conditional_on` tokens), and REF impact traversal.
+The server issues only `SELECT`s; it holds no write path (I1/I2 are untouched).
 
 Migrations after the baseline are numbered files in `db/migrations/`; apply in order
 with `psql` as superuser. The baseline `schema.sql` is kept in sync for fresh inits.

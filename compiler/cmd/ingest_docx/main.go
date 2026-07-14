@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -55,6 +56,17 @@ var (
 	reDefined   = regexp.MustCompile(`^(?:\d+\.\s*)?(.{2,60}?)\s+là\s+\p{L}`)
 	reDuration  = regexp.MustCompile(`(\d{1,4})\s*(ngày làm việc|ngày|tháng|năm|tuần|giờ)`)
 	reEffective = regexp.MustCompile(`ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})`)
+
+	// Statutory cross-references: "quy định tại [điểm …] [khoản …] Điều N[, M
+	// và K] [của Bộ luật/Luật <tên>]". The article list becomes REF edges; the
+	// optional "của …" tail switches the target document (absent or "… này"
+	// keeps the citing document).
+	reCitation = regexp.MustCompile(`(?i)(?:quy định tại|quy định ở|theo)\s+` +
+		`((?:điểm\s+[\p{L}\d]{1,3}\s+)?(?:(?:các\s+)?khoản\s+\d+(?:\s*(?:,|và|hoặc)\s*\d+)*\s+)?` +
+		`(?:các\s+)?điều\s+\d+(?:\s*(?:,|và|hoặc)\s*\d+)*)` +
+		`(\s+của\s+(?:bộ\s+luật|luật)\s+[^,;.()\n]{0,60})?`)
+	reArticleNums = regexp.MustCompile(`(?i)điều\s+(\d+(?:\s*(?:,|và|hoặc)\s*\d+)*)`)
+	reNum         = regexp.MustCompile(`\d+`)
 )
 
 var (
@@ -70,6 +82,93 @@ var domainSignals = map[string][]string{
 	"Taxation":                {"thuế", "người nộp thuế", "thu nhập chịu thuế", "khấu trừ", "hoàn thuế", "hóa đơn"},
 	"Enterprise / Commercial": {"doanh nghiệp", "cổ đông", "vốn điều lệ", "hội đồng quản trị", "hợp đồng thương mại"},
 	"Criminal Law":            {"tội phạm", "hình phạt", "phạt tù", "truy cứu trách nhiệm hình sự", "bị cáo"},
+}
+
+// RefExtracted is the JSONB payload of an extracted citation edge. The three
+// REFPayload fields (source, target_iri, mode) drive refgraph traversal;
+// article/text are provenance for the console.
+type RefExtracted struct {
+	Kind      string `json:"kind"`
+	Source    string `json:"source"`
+	TargetIRI string `json:"target_iri"`
+	Mode      string `json:"mode"`
+	Article   string `json:"article,omitempty"`
+	Text      string `json:"text,omitempty"`
+}
+
+type refEdge struct {
+	ext  RefExtracted
+	para int
+	span int
+}
+
+// nameStops terminate a cited document name: the regex tail cannot lookahead,
+// so clause text following the name ("… của Bộ luật Lao động và có đủ 15
+// năm …") is cut here at the first connective.
+var nameStops = []string{" và ", " thì ", " khi ", " nếu ", " được ", " bị ", " mà ", " theo ", " trong "}
+
+// iriToken normalizes a document name to an IRI segment ("Bộ luật Dân sự" ->
+// "Bộ-luật-Dân-sự").
+func iriToken(name string) string {
+	for _, s := range nameStops {
+		if i := strings.Index(name, s); i > 0 {
+			name = name[:i]
+		}
+	}
+	return strings.Join(strings.Fields(strings.TrimSpace(name)), "-")
+}
+
+func articleIRI(docToken, num string) string {
+	return fmt.Sprintf("urn:vn:%s:Đ%s", docToken, num)
+}
+
+// extractRefs finds statutory citations in one paragraph. source is the citing
+// article's IRI; each cited article number yields one edge. seen dedups edges
+// document-wide on (source, target, mode).
+func extractRefs(p, docToken, article string, para int, seen map[string]bool) []refEdge {
+	srcSeg := "preamble"
+	if m := reNum.FindString(article); m != "" {
+		srcSeg = "Đ" + m
+	}
+	source := fmt.Sprintf("urn:vn:%s:%s", docToken, srcSeg)
+	mode := "cite"
+	if strings.Contains(strings.ToLower(p), "sửa đổi, bổ sung") {
+		mode = "amend"
+	}
+
+	var out []refEdge
+	for _, m := range reCitation.FindAllStringSubmatch(p, -1) {
+		listPart, tail := m[1], m[2]
+		targetDoc := docToken
+		if tail != "" && !strings.Contains(strings.ToLower(tail), "này") {
+			name := strings.TrimPrefix(strings.TrimSpace(tail), "của ")
+			targetDoc = iriToken(name)
+		}
+		am := reArticleNums.FindStringSubmatch(listPart)
+		if am == nil {
+			continue
+		}
+		for _, n := range reNum.FindAllString(am[1], -1) {
+			target := articleIRI(targetDoc, n)
+			if target == source {
+				continue
+			}
+			key := source + "→" + target + "|" + mode
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			out = append(out, refEdge{
+				ext: RefExtracted{
+					Kind: "REF", Source: source, TargetIRI: target, Mode: mode,
+					Article: article, Text: truncate(m[0], 200),
+				},
+				para: para,
+				span: len([]rune(m[0])),
+			})
+		}
+	}
+	return out
 }
 
 func containsAny(hay string, cues []string) (string, bool) {
@@ -250,9 +349,20 @@ FROM kernel_instance k
 LEFT JOIN source_map s ON s.instance_pk = k.pk
 WHERE k.instance_id = $1::uuid AND s.id IS NULL`
 
+// insertRefSQL is idempotent on instance_id: re-running ref extraction over an
+// already-ingested corpus inserts only edges not yet present (the EXCLUDE
+// constraint would otherwise reject the overlapping t_text slice).
+const insertRefSQL = `
+INSERT INTO kernel_instance (instance_id, constructor, payload, t_text, t_fact)
+SELECT $1::uuid, 'REF', $2::jsonb, $3::tstzrange, $4::tstzrange
+WHERE NOT EXISTS (SELECT 1 FROM kernel_instance WHERE instance_id = $1::uuid)
+RETURNING pk`
+
 func main() {
 	backfill := flag.Bool("backfill-sourcemap", false,
 		"do not ingest; only insert missing source_map rows for instances previously ingested from this corpus (matched by deterministic UUID)")
+	refsOnly := flag.Bool("refs-only", false,
+		"do not ingest clauses; only extract statutory citations and insert missing REF edges (idempotent)")
 	flag.Parse()
 	path := "../data/125_VBHN-VPQH_672381.docx"
 	if flag.NArg() > 0 {
@@ -281,6 +391,8 @@ func main() {
 		span  int
 	}
 	var items []item
+	var refs []refEdge
+	seenRef := map[string]bool{}
 	var chapter, article string
 	counts := map[kernel.Constructor]int{}
 	temporalCount := 0
@@ -298,6 +410,9 @@ func main() {
 			// fall through: the article heading itself may be a norm (e.g. a
 			// prohibition heading), so we still classify it below.
 		}
+
+		// Citations occur in any paragraph, classified as a norm or not.
+		refs = append(refs, extractRefs(p, docToken, article, i, seenRef)...)
 
 		c, modality, cue, iso, ok := classify(p)
 		if !ok {
@@ -341,12 +456,31 @@ func main() {
 	fmt.Print(" Evidence terms    : ")
 	printEvidence(evidence)
 	fmt.Println(bar)
+	internalRefs, externalRefs, amendRefs := 0, 0, 0
+	for _, e := range refs {
+		if strings.Contains(e.ext.TargetIRI, docToken) {
+			internalRefs++
+		} else {
+			externalRefs++
+		}
+		if e.ext.Mode == "amend" {
+			amendRefs++
+		}
+	}
 	fmt.Printf(" Extracted instances: %d\n", len(items))
 	fmt.Printf("   NRM (obligation) : %d\n", counts[kernel.NRM])
 	fmt.Printf("   GRD (prohibition): %d\n", counts[kernel.GRD])
 	fmt.Printf("   PWR (right)      : %d\n", counts[kernel.PWR])
 	fmt.Printf("   CLS (definition) : %d\n", counts[kernel.CLS])
 	fmt.Printf("   with Window (temporal): %d\n", temporalCount)
+	fmt.Printf(" Citation edges (REF): %d  (internal %d, cross-document %d, amend-mode %d)\n",
+		len(refs), internalRefs, externalRefs, amendRefs)
+	for i, e := range refs {
+		if i >= 5 {
+			break
+		}
+		fmt.Printf("   • %s —%s→ %s  (%q)\n", e.ext.Source, e.ext.Mode, e.ext.TargetIRI, e.ext.Text)
+	}
 	fmt.Println(bar)
 
 	// ---- Insert into DB ----
@@ -381,7 +515,7 @@ func main() {
 			}
 			inserted += int(tag.RowsAffected())
 		}
-	} else {
+	} else if !*refsOnly {
 		for _, it := range items {
 			raw, err := json.Marshal(it.ext)
 			if err != nil {
@@ -397,6 +531,35 @@ func main() {
 			inserted++
 		}
 	}
+
+	refInserted, refSkipped := 0, 0
+	if !*backfill {
+		for _, e := range refs {
+			raw, err := json.Marshal(e.ext)
+			if err != nil {
+				log.Fatalf("marshal ref: %v", err)
+			}
+			id := detUUID("REF|" + e.ext.Source + "|" + e.ext.TargetIRI + "|" + e.ext.Mode)
+			var pk int64
+			err = tx.QueryRow(ctx, insertRefSQL, id, string(raw), validity, validity).Scan(&pk)
+			if errors.Is(err, pgx.ErrNoRows) {
+				refSkipped++ // edge already present from an earlier run
+				continue
+			}
+			if err != nil {
+				log.Fatalf("insert REF %s→%s: %v", e.ext.Source, e.ext.TargetIRI, err)
+			}
+			art := e.ext.Article
+			if art == "" {
+				art = "preamble"
+			}
+			locus := fmt.Sprintf("%s : %s ¶%d ⇒ %s", docToken, art, e.para, e.ext.TargetIRI)
+			if _, err := tx.Exec(ctx, sourceMapSQL, pk, locus, "citation", e.span); err != nil {
+				log.Fatalf("source_map REF %s: %v", id, err)
+			}
+			refInserted++
+		}
+	}
 	if err := tx.Commit(ctx); err != nil {
 		log.Fatalf("commit: %v", err)
 	}
@@ -404,7 +567,10 @@ func main() {
 		fmt.Printf(" Backfilled %d source_map rows (existing instances, I9).\n", inserted)
 		return
 	}
-	fmt.Printf(" Ingested %d instances into kernel_instance with [now, infinity).\n", inserted)
+	if !*refsOnly {
+		fmt.Printf(" Ingested %d instances into kernel_instance with [now, infinity).\n", inserted)
+	}
+	fmt.Printf(" REF edges: %d inserted, %d already present (idempotent).\n", refInserted, refSkipped)
 
 	// ---- Show a couple of temporal (Window) exemplars ----
 	fmt.Println(bar)
